@@ -2,11 +2,11 @@ package buildingsextractor;
 
 import java.util.Collection;
 
-public class GKHPagerPage extends PageDownloader {
+public class GKHPagerPage extends PageJob {
 
 	public Collection<String> buildingURLs;
-	public GKHPagerPage(String stringURL) {
-		super(stringURL);
+	public GKHPagerPage(String stringURL, Crawler jobMaster) {
+		super(stringURL, jobMaster);
 	}
 
 	@Override

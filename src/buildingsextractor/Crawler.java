@@ -29,7 +29,6 @@ public class Crawler extends PageDownloader {
 	 * Just a vector of objects {PageDownloader, Future<?>}, where Future is generated for said downloader.
 	 * This is to track Futures for jobs, to cancel specific jobs, that has not been started yet.
 	 */
-	@SuppressWarnings("unused")
 	private
 	class JobFuturePair {
 		public final PageDownloader job;
@@ -72,6 +71,10 @@ public class Crawler extends PageDownloader {
 		submittedPairs = new ConcurrentLinkedQueue<>();
 	}
 
+	/**
+	 * Метод для запуска полного всего цикла работы этого краулера. 
+	 * Должен запускаться только один раз из главного треда (Main)
+	 */
 	@Override
 	public void run(){
 		try {
@@ -84,7 +87,9 @@ public class Crawler extends PageDownloader {
 			
 			//2.2 Создать задания загрузки всех страниц пейджера
 			for (int i=1; i<=lastPage; i++) {
-				GKHPagerPage page = new GKHPagerPage(url.toExternalForm()+"&page="+String.valueOf(i));
+				GKHPagerPage page = new GKHPagerPage(
+						url.toExternalForm()+"&page="+String.valueOf(i),
+						this);
 				submit(page);
 			}
 			
@@ -95,7 +100,11 @@ public class Crawler extends PageDownloader {
 					// Отправка задания Future на выполнение (скачивание и далее).
 					// Результат в сооветствующем объекте submittedPairs.peek().job 
 					headFuture.get(); // can't use awaitTermination, because jobs are submitting other jobs
-					submittedPairs.poll(); // no synch with peek and isEmpty is needed as all elements are added to the tail and only this thread is running task removal.
+					
+					JobFuturePair finishedPair = submittedPairs.poll(); // no synch with peek and isEmpty is needed as all elements are added to the tail and only this thread is running task removal.
+					// Если finishedPair - объект загрузки дома, то присоединить дом к результатам.
+					if (finishedPair.job instanceof GKHBuildingPage) 
+						results.add(((GKHBuildingPage)finishedPair.job).building);
 			}
 		
 		} catch (InterruptedException | ExecutionException e) {
