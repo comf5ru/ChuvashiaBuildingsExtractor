@@ -1,8 +1,10 @@
 package buildingsextractor;
 
+import java.util.List;
 import java.util.Properties;
 
 import org.jdom2.Document;
+import org.jdom2.Element;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -49,10 +51,29 @@ public class Building {
 		pageDownloadDate = fmt.print(dt);
 	}
 	
+	private static final String TITLE_SPAN = 
+			"//html:div[contains(concat(' ', normalize-space(@id), ' '), ' printViewAnketa ')]"
+			+ "//html:h1/html:span";
+	private static final String YEAR_TD = 
+			"//html:div[contains(concat(' ', normalize-space(@id), ' '), ' form_block_1 ')]"
+			+ "//html:table[contains(concat(' ', normalize-space(@class), ' '), ' mkd-table ')]"
+			+ "//html:span[contains(concat(' ', normalize-space(@class), ' '), ' b-tabulation_text ') and text()='Год ввода в эксплуатацию']"
+			+ "//ancestor::html:tr"
+			+ "//html:td[contains(concat(' ', normalize-space(@class), ' '), ' b-td_value-def ')]"
+			;
+	
 	/**
 	 * Получает данные из загруженной страницы: dom -> data
 	 */
 	public void parse_data () {
+		List<Element> result;
+		result = Main.queryXPathList(TITLE_SPAN, dom.getRootElement());
+		assert (result.size() == 1);
 		
+		//data.setProperty("Полный адрес", result.get(0).getText());
+		result = Main.queryXPathList(YEAR_TD, dom.getRootElement());
+		assert (result.size() == 1);
+		
+		data.setProperty("Год ввода в эксплуатацию", result.get(0).getText());
 	}
 }

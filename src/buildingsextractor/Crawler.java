@@ -93,7 +93,7 @@ public class Crawler extends PageDownloader {
 			
 			//2. create more PageDownloader objects by parsing this page;
 			//2.1 Получить номер последней страницы пейджера
-			List<Element> result = queryXPathList(PAGER_LAST_PAGE_LINK, dom.getRootElement());
+			List<Element> result = Main.queryXPathList(PAGER_LAST_PAGE_LINK, dom.getRootElement());
 			assert (result.size() == 1);
 			int lastPage = Integer.decode(result.get(0).getText()); 
 			

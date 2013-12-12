@@ -36,7 +36,7 @@ public class GKHPagerPage extends PageJob {
 	@Override
 	public void run() {
 		super.run(); // --> dom
-		List<Element> result = queryXPathList(BUILDING_LINK, dom.getRootElement());
+		List<Element> result = Main.queryXPathList(BUILDING_LINK, dom.getRootElement());
 	
 		for(Element element : result) {
 			String href = element.getAttribute("href").getValue();
