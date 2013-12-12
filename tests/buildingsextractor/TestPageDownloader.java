@@ -47,7 +47,7 @@ public class TestPageDownloader {
 	}
 	
 	@Test
-	public void testGoogleDownload() {
+	public void testGoogleDownload() throws Exception {
 		PageDownloader pd = new PageDownloader("http://google.com");
 		assertNotNull("PageDownloader was not created", pd);
 		pd.run();

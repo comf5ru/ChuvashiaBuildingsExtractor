@@ -10,6 +10,7 @@ import java.net.ConnectException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import org.jdom2.Document;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.input.sax.XMLReaderSAX2Factory;
@@ -24,9 +25,9 @@ public class PageDownloader  implements Runnable {
 	public final URL url;
 	
 	/**
-	 * полученный в результате скачивания DOM 
+	 * полученный в результате скачивания DOM. Также возвращается по call().
 	 */
-	public org.jdom2.Document dom;
+	public Document dom;
 	
 	/**
 	 * @param stringURL - URL страницы для скачивания.
@@ -58,6 +59,7 @@ public class PageDownloader  implements Runnable {
 		return u.toLowerCase();
 	}
 	
+
 	@Override
 	public void run() {
 		try {
@@ -76,10 +78,10 @@ public class PageDownloader  implements Runnable {
 	 * @throws JDOMException 
 	 */
 	private final 
-	org.jdom2.Document downloadPage() throws InterruptedException, JDOMException, IOException {
+	Document downloadPage() throws InterruptedException, JDOMException, IOException {
 //		Main.log(Level.FINE, String.format("Downloading %s from network...%n", url.toString()));
 		
-		org.jdom2.Document doc = null;
+		Document doc = null;
 		try {
 			XMLReaderSAX2Factory saxConverter = new XMLReaderSAX2Factory(false, "org.ccil.cowan.tagsoup.Parser");
 			SAXBuilder builder = new SAXBuilder(saxConverter);
@@ -120,6 +122,5 @@ public class PageDownloader  implements Runnable {
 				return false;
 			}
 		return false; // unknown connection type
-	}	
-	
+	}
 }

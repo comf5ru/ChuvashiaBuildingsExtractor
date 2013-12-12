@@ -8,6 +8,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.jdom2.Document;
+
 /**
  * Класс для обработки множества страниц.
  * Получает адрес "стартовой страницы" и затем организует
@@ -16,8 +18,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * Создаёт и контроллирует множество подчинённых объектов PageDownloader, работающих параллельно 
  * (multi-threading).
  */
-public class Crawler extends PageDownloader{
-	
+public class Crawler extends PageDownloader {
 	/**
 	 * Ссылка на внешнее хранилище, куда будут сохраняться созданные объекты из страниц
 	 */
@@ -54,6 +55,13 @@ public class Crawler extends PageDownloader{
 	 */
 	private ExecutorService executor;	
 
+	/**
+	 * Конструктор
+	 * @param stringURL - URL начальной страницы. Чтобы всё работало верно должен быть начальной страницей города:
+	 *  "http://www.reformagkh.ru/myhouse/list?tid=2358783"  -- для Чебоксар
+	 * @param results
+	 * @param threadsNumber
+	 */
 	public Crawler(String stringURL, Collection<Building> results, int threadsNumber) {
 		super(stringURL);
 		this.results = results;
@@ -65,33 +73,55 @@ public class Crawler extends PageDownloader{
 	}
 
 	@Override
-	public void run() {
-		//1. download base page to this.dom;
-		super.run(); 
-		
-		//2. create more PageDownloader objects by parsing this page;
-		
-		//3. loop until all the objects are finished.
-		// wait until all the jobs are finished before returning.
-		while (!submittedPairs.isEmpty()) {
-			try {
-				Future<?> headFuture = submittedPairs.peek().future; 
-				headFuture.get(); // can't use awaitTermination, because jobs are submitting other jobs
-				submittedPairs.poll(); // no synch with peek and isEmpty is needed as all elements are added to the tail and only this thread is running task removal.
-			} catch (InterruptedException | ExecutionException e) {
-				// Stop all jobs
-				executor.shutdown(); // no new jobs submitted
-				
-				// stop all jobs submitted (whether running or not)
-				for (JobFuturePair pair: submittedPairs)
-					pair.future.cancel(true);
-				break;
+	public void run(){
+		try {
+			//1. download base page to this.dom;
+			super.run(); 
+			
+			//2. create more PageDownloader objects by parsing this page;
+			//2.1 Получить номер последней страницы пейджера
+			int lastPage = 242; // TODO
+			
+			//2.2 Создать задания загрузки всех страниц пейджера
+			for (int i=1; i<=lastPage; i++) {
+				GKHPagerPage page = new GKHPagerPage(url.toExternalForm()+"&page="+String.valueOf(i));
+				submit(page);
 			}
-		}
+			
+			//3. loop until all the objects are finished.
+			// wait until all the jobs are finished before returning.
+			while (!submittedPairs.isEmpty()) {
+					Future<?> headFuture = submittedPairs.peek().future; 
+					// Отправка задания Future на выполнение (скачивание и далее).
+					// Результат в сооветствующем объекте submittedPairs.peek().job 
+					headFuture.get(); // can't use awaitTermination, because jobs are submitting other jobs
+					submittedPairs.poll(); // no synch with peek and isEmpty is needed as all elements are added to the tail and only this thread is running task removal.
+			}
 		
-		executor.shutdown();		
+		} catch (InterruptedException | ExecutionException e) {
+			// Stop all jobs
+			executor.shutdown(); // no new jobs submitted
+			
+			// stop all jobs submitted (whether running or not)
+			for (JobFuturePair pair: submittedPairs)
+				pair.future.cancel(true);
+		}
+		executor.shutdown();
 	}
 	
-
+	/**
+	 * Entry point for Jobs to add more children jobs into a queue
+	 * @param job - new job to be executed some moment in the future.
+	 * @throws InterruptedException 
+	 */
+	synchronized public
+	void submit (PageDownloader job) throws InterruptedException {
+		// if thread submitting a job was interrupted while waiting on synchronization
+		//  then do not submit 
+		if (Thread.interrupted())
+			throw new InterruptedException();
+		
+		submittedPairs.add(new JobFuturePair(job, executor.submit(job)));
+	}
 	
 }
