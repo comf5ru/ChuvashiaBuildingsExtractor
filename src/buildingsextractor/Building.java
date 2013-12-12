@@ -1,5 +1,7 @@
 package buildingsextractor;
 
+import java.util.Properties;
+
 import org.jdom2.Document;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -27,6 +29,12 @@ public class Building {
 	 */
 	public final String pageDownloadDate;
 	
+	/**
+	 * Этот член класса содержит все результирующие данные со страницы как набор свойств (ключ-значение):
+	 * улица, номер дома, номер корпуса, жилая площадь, число подъездов и т.п. 
+	 * Если свойство отсутствует, то его значение считается "неизвестно".
+	 */
+	public Properties data; // thread-safe class
 	
 	/**
 	 * Конструктор для создания объекта из скачанных данных

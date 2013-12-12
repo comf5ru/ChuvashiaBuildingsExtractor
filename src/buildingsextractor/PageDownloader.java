@@ -60,7 +60,6 @@ public class PageDownloader  implements Runnable {
 	
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
 		try {
 			dom = downloadPage();
 		} catch (InterruptedException | JDOMException | IOException e) {
