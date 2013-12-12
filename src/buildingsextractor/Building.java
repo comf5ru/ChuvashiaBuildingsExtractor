@@ -49,5 +49,10 @@ public class Building {
 		pageDownloadDate = fmt.print(dt);
 	}
 	
-	
+	/**
+	 * ѕолучает данные из загруженной страницы: dom -> data
+	 */
+	public void parse_data () {
+		
+	}
 }

@@ -14,17 +14,20 @@ import org.junit.Test;
 
 public class TestCrawler {
 	/**
-	 *  ласс, повтор€ющий Crawler, но не добавл€ющий новых подзаданий в очередь. 
+	 *  ласс, повтор€ющий Crawler, но не добавл€ющий новых подзаданий в очередь кроме нескольких первых 
+	 * (аргумент конструктора allowSubmits). 
 	 * ¬место этого они сохран€ютс€ в член класса queue (дл€ отладочных целей).
 	 */
 	public class ParalyzedCrawler extends Crawler {
 		
 		public LinkedList<PageDownloader> queue;
+		public int submitsLeft;
 
 		public ParalyzedCrawler(String stringURL, Collection<Building> results,
-				int threadsNumber) {
+				int threadsNumber, int allowSubmits) {
 			super(stringURL, results, threadsNumber);
 			queue = new LinkedList<>();
+			submitsLeft = allowSubmits;
 		}
 
 		@Override
@@ -35,7 +38,11 @@ public class TestCrawler {
 			if (Thread.interrupted())
 				throw new InterruptedException();
 			
-			queue.add(job);
+			if (submitsLeft-- > 0)
+				super.submit(job);
+			else {
+				queue.add(job);
+			}
 		}
 	}
 
@@ -52,7 +59,7 @@ public class TestCrawler {
 	@Before
 	public void setUp() throws Exception {
 		result = new LinkedList<Building>();
-		paralyzedCrawler = new ParalyzedCrawler("http://www.reformagkh.ru/myhouse/list?tid=2358783",result,4);
+		paralyzedCrawler = new ParalyzedCrawler("http://www.reformagkh.ru/myhouse/list?tid=2358783",result,4, 0);
 	}
 
 	@After
@@ -71,4 +78,16 @@ public class TestCrawler {
 				     paralyzedCrawler.queue.getLast().url.toExternalForm());
 	}
 
+	@Test
+	public void testPagerPageSubmits() {
+		paralyzedCrawler = new ParalyzedCrawler("http://www.reformagkh.ru/myhouse/list?tid=2358783",result,4, 2);
+		paralyzedCrawler.run();
+		
+		assertNotNull(paralyzedCrawler.queue);
+		assertTrue(paralyzedCrawler.queue.size()>=1);
+		assertTrue("ƒл€ „ебоксар", paralyzedCrawler.queue.size() == 260); // 242 -2 + 2*10
+		assertNotEquals(paralyzedCrawler.url.toExternalForm()+"&page=1",paralyzedCrawler.queue.getFirst().url.toExternalForm());
+		assertEquals(paralyzedCrawler.url.toExternalForm()+"&page=3",paralyzedCrawler.queue.getFirst().url.toExternalForm());
+
+	}
 }
