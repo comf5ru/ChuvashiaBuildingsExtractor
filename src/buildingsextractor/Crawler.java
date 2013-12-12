@@ -1,6 +1,7 @@
 package buildingsextractor;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -8,7 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import org.jdom2.Document;
+import org.jdom2.Element;
 
 /**
  * Класс для обработки множества страниц.
@@ -19,11 +20,20 @@ import org.jdom2.Document;
  * (multi-threading).
  */
 public class Crawler extends PageDownloader {
+	
+	/**
+	 * Доступ к элементу А содержащему номер последней страницы пейджера
+	 */
+	private static final String PAGER_LAST_PAGE_LINK = 
+			"//html:div[contains(concat(' ', normalize-space(@id), ' '), ' printAnketa ')]"
+			+ "//html:ul[contains(concat(' ', normalize-space(@class), ' '), ' pager ')]"
+			+ "/html:li[contains(concat(' ', normalize-space(@class), ' '), ' pager-last ')]"
+			+ "//html:a";
+	
 	/**
 	 * Ссылка на внешнее хранилище, куда будут сохраняться созданные объекты из страниц
 	 */
 	private final Collection<Building> results;
-	
 	
 	/**
 	 * Just a vector of objects {PageDownloader, Future<?>}, where Future is generated for said downloader.
@@ -83,7 +93,9 @@ public class Crawler extends PageDownloader {
 			
 			//2. create more PageDownloader objects by parsing this page;
 			//2.1 Получить номер последней страницы пейджера
-			int lastPage = 242; // TODO
+			List<Element> result = queryXPathList(PAGER_LAST_PAGE_LINK, dom.getRootElement());
+			assert (result.size() == 1);
+			int lastPage = Integer.decode(result.get(0).getText()); 
 			
 			//2.2 Создать задания загрузки всех страниц пейджера
 			for (int i=1; i<=lastPage; i++) {
