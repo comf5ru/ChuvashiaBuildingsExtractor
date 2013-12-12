@@ -1,7 +1,7 @@
 package buildingsextractor;
 
 import buildingsextractor.PageDownloader;
-/*
+/**
  * Главный класс, будет запускать всю работу.
  * 
  */

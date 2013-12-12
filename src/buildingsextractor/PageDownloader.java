@@ -9,7 +9,6 @@ import java.net.URLConnection;
 import java.net.ConnectException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.logging.Level;
 
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
