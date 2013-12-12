@@ -13,6 +13,7 @@ public class Main {
 		PageDownloader myPage = new PageDownloader("http://google.com");
 		myPage.run();
 		
+		Building b = new Building("no url", null);
 		System.out.print(myPage.dom != null);
 	}
 

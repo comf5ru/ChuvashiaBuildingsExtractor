@@ -14,8 +14,6 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.input.sax.XMLReaderSAX2Factory;
 
-//import dloader.Main;
-
 /**
  * Объекты этого класса скачивают и хранят одиночные страницы 
  */
