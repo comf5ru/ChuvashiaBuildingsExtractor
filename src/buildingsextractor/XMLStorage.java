@@ -14,6 +14,7 @@ import org.jdom2.Element;
  *
  */
 public class XMLStorage {
+	public
 	XMLCache cache;
 
 	/**

@@ -33,13 +33,13 @@ public class Crawler extends PageDownloader {
 	/**
 	 * Ссылка на внешнее хранилище, куда будут сохраняться созданные объекты из страниц
 	 */
-	private final Collection<Building> results;
+	protected final Collection<Object> results;
 	
 	/**
 	 * Just a vector of objects {PageDownloader, Future<?>}, where Future is generated for said downloader.
 	 * This is to track Futures for jobs, to cancel specific jobs, that has not been started yet.
 	 */
-	private
+	protected
 	class JobFuturePair {
 		public final PageDownloader job;
 		public final Future<?> future;
@@ -68,12 +68,13 @@ public class Crawler extends PageDownloader {
 	 * Конструктор
 	 * @param stringURL - URL начальной страницы. Чтобы всё работало верно должен быть начальной страницей города:
 	 *  "http://www.reformagkh.ru/myhouse/list?tid=2358783"  -- для Чебоксар
-	 * @param results
+	 * @param results2
 	 * @param threadsNumber
 	 */
-	public Crawler(String stringURL, Collection<Building> results, int threadsNumber) {
+	@SuppressWarnings("unchecked")
+	public Crawler(String stringURL, Collection<?> results2, int threadsNumber) {
 		super(stringURL);
-		this.results = results;
+		this.results = (Collection<Object>) results2;
 		if (threadsNumber <= 0)
 			threadsNumber = CORETHREADS_NUMBER;
 		executor = Executors.newFixedThreadPool(threadsNumber);
@@ -92,46 +93,32 @@ public class Crawler extends PageDownloader {
 			super.run(); 
 			
 			//2. create more PageDownloader objects by parsing this page;
-			//2.1 Получить номер последней страницы пейджера
-			List<Element> result = Main.queryXPathList(PAGER_LAST_PAGE_LINK, dom.getRootElement());
-			assert (result.size() == 1);
-			int lastPage = Integer.decode(result.get(0).getText()); 
-			
-			//2.2 Создать задания загрузки всех страниц пейджера
-			for (int i=1; i<=lastPage; i++) {
-				GKHPagerPage page = new GKHPagerPage(
-						url.toExternalForm()+"&page="+String.valueOf(i),
-						this);
-				submit(page);
-			}
+			parseSelf();
 			
 			//3. loop until all the objects are finished.
 			// wait until all the jobs are finished before returning.
 			
 			//3.0 Total pages estimate;
-			int totalPages = lastPage*11+1;
 			int pageCounter = 1;
 			int updateGranularity = 10;
 			int updateGranula = 0;
 			long startingTime = System.nanoTime();
-			long lastElapsed = 0;
+//			long lastElapsed = 0;
 			while (!submittedPairs.isEmpty()) {
-				long currentTime = System.nanoTime();
-					long elapsed = (currentTime - startingTime)/1000_000_000;
-					if ((pageCounter/updateGranularity != updateGranula) || (elapsed-lastElapsed)>3 ){
-						lastElapsed = elapsed;
-						updateGranula = pageCounter/updateGranularity;
-						System.out.println("Downloaded: "+pageCounter+" / "+totalPages + " pages. [" +elapsed+" seconds]");
-					}
-					Future<?> headFuture = submittedPairs.peek().future; 
-					// Отправка задания Future на выполнение (скачивание и далее).
-					// Результат в сооветствующем объекте submittedPairs.peek().job 
-					headFuture.get(); // can't use awaitTermination, because jobs are submitting other jobs
-					pageCounter++;
-					JobFuturePair finishedPair = submittedPairs.poll(); // no synch with peek and isEmpty is needed as all elements are added to the tail and only this thread is running task removal.
-					// Если finishedPair - объект загрузки дома, то присоединить дом к результатам.
-					if (finishedPair.job instanceof GKHBuildingPage) 
-						results.add(((GKHBuildingPage)finishedPair.job).building);
+				// check if needs updating
+				long elapsed = (System.nanoTime() - startingTime)/1000_000_000;
+				if (pageCounter/updateGranularity != updateGranula) {
+//				if ((pageCounter/updateGranularity != updateGranula) || (elapsed-lastElapsed)>3 ){
+//					lastElapsed = elapsed;
+					updateGranula = pageCounter/updateGranularity;
+					System.out.println("Downloaded: "+pageCounter+", queue: "+submittedPairs.size()+" pages. ["+elapsed+" seconds]");
+				}
+				Future<?> headFuture = submittedPairs.peek().future; 
+				// Отправка задания Future на выполнение (скачивание и далее).
+				// Результат в сооветствующем объекте submittedPairs.peek().job 
+				headFuture.get(); // can't use awaitTermination, because jobs are submitting other jobs
+				pageCounter++;
+				proccessFinished(submittedPairs.poll()); // no synch with peek and isEmpty is needed as all elements are added to the tail and only this thread is running task removal.
 			}
 		
 		} catch (InterruptedException | ExecutionException e) {
@@ -143,6 +130,29 @@ public class Crawler extends PageDownloader {
 				pair.future.cancel(true);
 		}
 		executor.shutdown();
+	}
+	
+	protected
+	void parseSelf() throws InterruptedException {
+		//2.1 Получить номер последней страницы пейджера
+		List<Element> result = Main.queryXPathList(PAGER_LAST_PAGE_LINK, dom.getRootElement());
+		assert (result.size() == 1);
+		int lastPage = Integer.decode(result.get(0).getText()); 
+		
+		//2.2 Создать задания загрузки всех страниц пейджера
+		for (int i=1; i<=lastPage; i++) {
+			GKHPagerPage page = new GKHPagerPage(
+					url.toExternalForm()+"&page="+String.valueOf(i),
+					this);
+			submit(page);
+		}
+	}
+	
+	protected
+	void proccessFinished(JobFuturePair finishedPair) {
+		// Если finishedPair - объект загрузки дома, то присоединить дом к результатам.
+		if (finishedPair.job instanceof GKHBuildingPage) 
+			results.add(((GKHBuildingPage)finishedPair.job).building);
 	}
 	
 	/**
