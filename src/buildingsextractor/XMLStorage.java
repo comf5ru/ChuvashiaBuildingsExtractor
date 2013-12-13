@@ -23,6 +23,7 @@ public class XMLStorage {
 	 * не переданные явно при вызове saveBuildings() )
 	 * @throws IOException if can't delete the file on rewrite==true
 	 */
+	public
 	XMLStorage(String xmlFileName, boolean rewrite) throws IOException {
 
 		if (rewrite) {
@@ -43,6 +44,7 @@ public class XMLStorage {
 	 * @param buildings - Множество новых зданий для добавления в файл.
 	 * @throws IOException - возникли проблемы при сохранении файла.
 	 */
+	public
 	void saveBuildings(Collection<Building> buildings) throws IOException {
 		for (Building b: buildings) {
 			Element e = new Element("Building");

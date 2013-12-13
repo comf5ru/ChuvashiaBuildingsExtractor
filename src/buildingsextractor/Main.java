@@ -18,14 +18,8 @@ import org.jdom2.xpath.XPathFactory;
 public class Main {
 
 	public static void main(String[] args) {
-		GKHBuildingPage bp = new GKHBuildingPage("http://www.reformagkh.ru/myhouse/view/7967974/?group=0", null);
-		bp.run();
-		
-		assert (bp.building != null) ;
-		assert (bp.building.dom != null);
-		
-		bp.building.parse_data();
-		
+		System.out.println("Hello");
+		System.err.println("Fuck off");
 	}
 
 	/**

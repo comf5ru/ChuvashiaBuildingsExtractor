@@ -7,9 +7,6 @@ import java.util.regex.Pattern;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 
 /**
  * Основная рабочая единица проекта - сущность "Здание".
@@ -45,12 +42,10 @@ public class Building {
 	 * @param url - адрес страницы с информацией об этом здании
 	 * @param dom - содержимое страницы с информацией об этом здании
 	 */
-	public Building(String url, Document dom) {
+	public Building(String url, Document dom, String date) {
 		pageURL = url;
 		this.dom = dom;
-		DateTime dt = new DateTime();
-		DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
-		pageDownloadDate = fmt.print(dt);
+		this.pageDownloadDate = date; 
 		data = new Properties();
 	}
 	

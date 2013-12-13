@@ -1,5 +1,9 @@
 package buildingsextractor;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+
 /**
  * Класс отвечает за загрузку страницы описания дома и создание
  * объекта Building по результатам загрузки. 
@@ -19,8 +23,9 @@ public class GKHBuildingPage extends PageJob {
 	@Override
 	public void run() {
 		super.run(); // --> dom
-		
-		building = new Building(url.toExternalForm(), dom);
+		DateTime dt = new DateTime();
+		DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
+		building = new Building(url.toExternalForm(), dom, fmt.print(dt));
 	}
 
 	
