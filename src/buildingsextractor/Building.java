@@ -1,5 +1,9 @@
 package buildingsextractor;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
 
@@ -49,6 +53,7 @@ public class Building {
 		DateTime dt = new DateTime();
 		DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
 		pageDownloadDate = fmt.print(dt);
+		data = new Properties();
 	}
 	
 	private static final String TITLE_SPAN = 
@@ -57,7 +62,8 @@ public class Building {
 	private static final String YEAR_TD = 
 			"//html:div[contains(concat(' ', normalize-space(@id), ' '), ' form_block_1 ')]"
 			+ "//html:table[contains(concat(' ', normalize-space(@class), ' '), ' mkd-table ')]"
-			+ "//html:span[contains(concat(' ', normalize-space(@class), ' '), ' b-tabulation_text ') and text()='Год ввода в эксплуатацию']"
+			+ "//html:span[contains(concat(' ', normalize-space(@class), ' '), ' b-tabulation_text ') and text()='"
+			+Main.UTF8_encode("Год ввода в эксплуатацию")+"']"
 			+ "//ancestor::html:tr"
 			+ "//html:td[contains(concat(' ', normalize-space(@class), ' '), ' b-td_value-def ')]"
 			;
@@ -69,8 +75,8 @@ public class Building {
 		List<Element> result;
 		result = Main.queryXPathList(TITLE_SPAN, dom.getRootElement());
 		assert (result.size() == 1);
+		data.setProperty("Полный адрес", Main.UTF8_decode(result.get(0).getText()));
 		
-		//data.setProperty("Полный адрес", result.get(0).getText());
 		result = Main.queryXPathList(YEAR_TD, dom.getRootElement());
 		assert (result.size() == 1);
 		

@@ -1,5 +1,6 @@
 package buildingsextractor;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,25 +27,46 @@ public class Main {
 	}
 
 	/**
-		 * Queries given JDOM document with XPath string
-		 * @param query - XPath string with all nodes with "html" namespace prefixes for parsed HTML files 
-		 * @param doc - JDOM Document or Element
-		 * @return List of found matches, may be of zero size if nothing is found
-		 */
-		public final static 
-		List<Element> queryXPathList(String query, Element doc) {
-				if (query == null) return new ArrayList<Element>(0);
-				try {
-					String nsURI = doc.getNamespaceURI();
-					XPathBuilder<Element> xpb = new XPathBuilder<Element>(query,Filters.element()); // null filter
-					// binding prefix to existing namespace as per XML standard requirement
-					xpb.setNamespace("html", nsURI);
-					XPathExpression<Element> xpe = xpb.compileWith(XPathFactory.instance()); // default factory
-					return xpe.evaluate(doc);
-				} catch (NullPointerException|IllegalStateException|IllegalArgumentException  e) {
-	//				Main.logger.log(Level.SEVERE,"",e);
-					return new ArrayList<Element>(0);
-				} 		
-		}
+	 * Queries given JDOM document with XPath string
+	 * @param query - XPath string with all nodes with "html" namespace prefixes for parsed HTML files 
+	 * @param doc - JDOM Document or Element
+	 * @return List of found matches, may be of zero size if nothing is found
+	 */
+	public final static 
+	List<Element> queryXPathList(String query, Element doc) {
+			if (query == null) return new ArrayList<Element>(0);
+			try {
+				String nsURI = doc.getNamespaceURI();
+				XPathBuilder<Element> xpb = new XPathBuilder<Element>(query,Filters.element()); // null filter
+				// binding prefix to existing namespace as per XML standard requirement
+				xpb.setNamespace("html", nsURI);
+				XPathExpression<Element> xpe = xpb.compileWith(XPathFactory.instance()); // default factory
+				return xpe.evaluate(doc);
+			} catch (NullPointerException|IllegalStateException|IllegalArgumentException  e) {
+//				Main.logger.log(Level.SEVERE,"",e);
+				return new ArrayList<Element>(0);
+			} 		
+	}
 
+	/**
+	 * Convert from web text to Java String 
+	 * @param encoded - String that was retuned by JDOM, encoded in UTF-8
+	 * @return decoded String 
+	 */
+	public final static
+	String UTF8_decode(String encoded) {
+		byte[] bArray = encoded.getBytes();
+		return new String(bArray, StandardCharsets.UTF_8);
+	}
+
+	/**
+	 * Convert from Java String to web text  
+	 * @param source - Java String
+	 * @return String encoded in UTF-8 
+	 */
+	public final static
+	String UTF8_encode(String source) {
+		byte[] bArray = source.getBytes(StandardCharsets.UTF_8);
+		return new String(bArray);
+	}
 }
