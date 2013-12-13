@@ -1,7 +1,9 @@
 package buildingsextractor;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -18,8 +20,22 @@ import org.jdom2.xpath.XPathFactory;
 public class Main {
 
 	public static void main(String[] args) {
-		System.out.println("Hello");
-		System.err.println("Fuck off");
+		System.out.println("Starting downloads from http://www.reformagkh.ru/myhouse/list?tid=2358783");
+		LinkedList<Building> results = new LinkedList<>();
+		Crawler crawler = new Crawler("http://www.reformagkh.ru/myhouse/list?tid=2358783", results, 10);
+		crawler.run();
+		
+//		for (Building b: results) 
+//			b.parse_data();
+		
+		XMLStorage s;
+		try {
+			s = new XMLStorage("Buildings_Chuvashia.xml", true);
+			s.saveBuildings(results);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	/**

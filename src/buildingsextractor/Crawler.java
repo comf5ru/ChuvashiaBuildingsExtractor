@@ -107,12 +107,27 @@ public class Crawler extends PageDownloader {
 			
 			//3. loop until all the objects are finished.
 			// wait until all the jobs are finished before returning.
+			
+			//3.0 Total pages estimate;
+			int totalPages = lastPage*11+1;
+			int pageCounter = 1;
+			int updateGranularity = 10;
+			int updateGranula = 0;
+			long startingTime = System.nanoTime();
+			long lastElapsed = 0;
 			while (!submittedPairs.isEmpty()) {
+				long currentTime = System.nanoTime();
+					long elapsed = (currentTime - startingTime)/1000_000_000;
+					if ((pageCounter/updateGranularity != updateGranula) || (elapsed-lastElapsed)>3 ){
+						lastElapsed = elapsed;
+						updateGranula = pageCounter/updateGranularity;
+						System.out.println("Downloaded: "+pageCounter+" / "+totalPages + " pages. [" +elapsed+" seconds]");
+					}
 					Future<?> headFuture = submittedPairs.peek().future; 
 					// Отправка задания Future на выполнение (скачивание и далее).
 					// Результат в сооветствующем объекте submittedPairs.peek().job 
 					headFuture.get(); // can't use awaitTermination, because jobs are submitting other jobs
-					
+					pageCounter++;
 					JobFuturePair finishedPair = submittedPairs.poll(); // no synch with peek and isEmpty is needed as all elements are added to the tail and only this thread is running task removal.
 					// Если finishedPair - объект загрузки дома, то присоединить дом к результатам.
 					if (finishedPair.job instanceof GKHBuildingPage) 

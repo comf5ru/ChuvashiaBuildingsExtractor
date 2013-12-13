@@ -31,7 +31,7 @@ public class TestGKHBuildingPage {
 		GKHBuildingPage bp = new GKHBuildingPage("http://www.reformagkh.ru/myhouse/view/7967974/?group=0", null);
 		bp.run();
 		assertNotNull("Null building generated", bp.building);
-		assertNotNull("Building has null dom", bp.building.dom);
+		assertNotNull("Building has null data", bp.building.data);
 		assertNotNull("Building has null date", bp.building.pageDownloadDate);
 	}
 

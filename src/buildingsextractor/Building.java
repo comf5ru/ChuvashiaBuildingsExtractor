@@ -23,7 +23,7 @@ public class Building {
 	/**
 	 * Содержимое страницы с информацией об этом здании
 	 */
-	public final Document dom;
+//	public final Document dom;
 	
 	/**
 	 * Дата получения информации о здании со страницы.
@@ -44,9 +44,12 @@ public class Building {
 	 */
 	public Building(String url, Document dom, String date) {
 		pageURL = url;
-		this.dom = dom;
+//		this.dom = dom;
 		this.pageDownloadDate = date; 
 		data = new Properties();
+		
+		parse_data(dom);
+//		this.dom = null; // сбросить
 	}
 	
 	/**
@@ -81,8 +84,9 @@ public class Building {
 	
 	/**
 	 * Получает данные из загруженной страницы: dom -> data
+	 * @param dom 
 	 */
-	public void parse_data () {
+	public void parse_data (Document dom) {
 		List<Element> result;
 		Properties var = new Properties();
 

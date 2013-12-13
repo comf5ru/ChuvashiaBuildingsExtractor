@@ -62,12 +62,14 @@ public class PageDownloader  implements Runnable {
 
 	@Override
 	public void run() {
+//		System.out.println("Starting download: "+url.toExternalForm()+"...");
 		try {
 			dom = downloadPage();
 		} catch (InterruptedException | JDOMException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+//		System.out.println("      ... finished "+url.toExternalForm()+"");
 	}
 
 	/** 
