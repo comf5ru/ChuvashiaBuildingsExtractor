@@ -71,7 +71,7 @@ public class Building {
 			;
 	
 	/**
-	 * Имена полей для подстановки в XPath для поиска в документе
+	 * Имена полей для подстановки в XPath для поиска на странице дома
 	 */
 	static final String[] parsedLines = {
 		"Год ввода в эксплуатацию",
@@ -82,6 +82,7 @@ public class Building {
 		"Количество квартир"
 	};
 	
+
 	/**
 	 * Получает данные из загруженной страницы: dom -> data
 	 * @param dom 
@@ -90,22 +91,31 @@ public class Building {
 		List<Element> result;
 		Properties var = new Properties();
 
+		// для каждого искомого свойства в таблице
 		for (String lineText: parsedLines) {
+			// устанавливаем переменную в XPath
 			var.setProperty("textval", Main.UTF8_encode(lineText));
+			// запрашиваем XPath
 			result = Main.queryXPathList(VAR_RECORD_TD, dom.getRootElement(), var);
 			if (result.size()>0)
+				// сохраняем полученный результат
 				data.setProperty(lineText, Main.UTF8_decode(result.get(0).getText()));
 		}
 		
+		// теперь отдельно парсим адрес дома
 		result = Main.queryXPathList(TITLE_SPAN, dom.getRootElement());
 		if (result.size() == 0)
 			return;
 		String fullAddress = Main.UTF8_decode(result.get(0).getText());
-		Pattern regexp = Pattern.compile("^(\\S \\S+)\\s+(.+)\\sд\\.(.*)$");
+		
+		// общий вид:
+		//  (сокращение_населённого_пункта Название Нас. Пункта)( сокр_улицы_бульвара_итп Название Улицы И Т П)? д.нумерация_дома
+		Pattern regexp = Pattern.compile("^(\\S+(?:\\s+[^\\p{javaLowerCase}]\\S*)+)(?:\\s+(.+)|)\\sд\\.(.*)$"); // не получилось использовать (...)? для улицы. Пришлось применять обходной путь (...|)
 		Matcher m = regexp.matcher(fullAddress);
 		if (m.matches()) {
 			data.setProperty("Населённый пункт", m.group(1)); // Включает сокращения "г ", "с ", "п "...
-			data.setProperty("Улица", m.group(2)); // включает сокращения типа "ул.", "пер.", "мкр." и т.п.
+			if (m.group(2)!=null && m.group(2).length()>0)
+				data.setProperty("Улица", m.group(2)); // включает сокращения типа "ул ", "пер ", "мкр " и т.п.
 			data.setProperty("Номер дома", m.group(3)); // может включать литеры, корпус и т.п.
 		}
 	}

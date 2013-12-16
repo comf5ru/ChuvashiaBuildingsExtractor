@@ -20,6 +20,15 @@ import org.jdom2.xpath.XPathFactory;
 public class Main {
 
 	public static void main(String[] args) {
+		
+		String base = "http://www.reformagkh.ru/myhouse/view/6503414/?group=0";
+//		String base = "http://www.reformagkh.ru/myhouse/view/6663275/?group=0";
+//		String base = "http://www.reformagkh.ru/myhouse/view/6934099/?group=0";
+		System.out.println("Testing multi-word recognition: "+base);
+		
+		GKHBuildingPage p = new GKHBuildingPage(base, null);
+		p.run();
+		
 		System.out.println("Starting downloads from http://www.reformagkh.ru/myhouse/list?tid=2358783");
 		LinkedList<Building> results = new LinkedList<>();
 		Crawler crawler = new Crawler("http://www.reformagkh.ru/myhouse/list?tid=2358783", results, 10);
