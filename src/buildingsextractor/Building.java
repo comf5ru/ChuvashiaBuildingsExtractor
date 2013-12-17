@@ -117,6 +117,7 @@ public class Building {
 			if (m.group(2)!=null && m.group(2).length()>0)
 				data.setProperty("Улица", m.group(2)); // включает сокращения типа "ул ", "пер ", "мкр " и т.п.
 			data.setProperty("Номер дома", m.group(3)); // может включать литеры, корпус и т.п.
-		}
+		} else 
+			System.err.println("Can't parse building address for page: "+pageURL+", string: "+fullAddress);
 	}
 }

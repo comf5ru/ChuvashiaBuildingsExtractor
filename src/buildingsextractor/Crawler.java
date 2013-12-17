@@ -1,5 +1,6 @@
 package buildingsextractor;
 
+import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -103,13 +104,10 @@ public class Crawler extends PageDownloader {
 			int updateGranularity = 10;
 			int updateGranula = 0;
 			long startingTime = System.nanoTime();
-//			long lastElapsed = 0;
 			while (!submittedPairs.isEmpty()) {
 				// check if needs updating
 				long elapsed = (System.nanoTime() - startingTime)/1000_000_000;
 				if (pageCounter/updateGranularity != updateGranula) {
-//				if ((pageCounter/updateGranularity != updateGranula) || (elapsed-lastElapsed)>3 ){
-//					lastElapsed = elapsed;
 					updateGranula = pageCounter/updateGranularity;
 					System.out.println("Downloaded: "+pageCounter+", queue: "+submittedPairs.size()+" pages. ["+elapsed+" seconds]");
 				}
@@ -121,7 +119,7 @@ public class Crawler extends PageDownloader {
 				proccessFinished(submittedPairs.poll()); // no synch with peek and isEmpty is needed as all elements are added to the tail and only this thread is running task removal.
 			}
 		
-		} catch (InterruptedException | ExecutionException e) {
+		} catch (InterruptedException | ExecutionException | MalformedURLException e) {
 			// Stop all jobs
 			executor.shutdown(); // no new jobs submitted
 			
@@ -132,8 +130,13 @@ public class Crawler extends PageDownloader {
 		executor.shutdown();
 	}
 	
+	/**
+	 * Получить подстраницы после загрузки стартовой страницы
+	 * @throws InterruptedException
+	 * @throws MalformedURLException 
+	 */
 	protected
-	void parseSelf() throws InterruptedException {
+	void parseSelf() throws InterruptedException, MalformedURLException {
 		//2.1 Получить номер последней страницы пейджера
 		List<Element> result = Main.queryXPathList(PAGER_LAST_PAGE_LINK, dom.getRootElement());
 		assert (result.size() == 1);
@@ -148,6 +151,10 @@ public class Crawler extends PageDownloader {
 		}
 	}
 	
+	/**
+	 * Собрать результат после завершения работы в параллельном треде. 
+	 * @param finishedPair
+	 */
 	protected
 	void proccessFinished(JobFuturePair finishedPair) {
 		// Если finishedPair - объект загрузки дома, то присоединить дом к результатам.

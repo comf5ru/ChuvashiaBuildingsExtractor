@@ -1,5 +1,6 @@
 package buildingsextractor;
 
+import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,18 +20,24 @@ public class RespublicCrawler extends Crawler {
 	}
 
 	/**
-	 * Доступ к элементу А содержащему номер последней страницы пейджера
+	 * Элемент таблицы, содержащий ссылку на город или ссылку на район
 	 */
 	private static final String LOCATIONS_TD = "//html:td[contains(concat(' ', normalize-space(@class), ' '), ' location ')]";
-	private static final String EXPAND_DIV_LINK = 
-			"//html:div[contains(concat(' ', normalize-space(@class), ' '), ' expand-button ')]"
-			+ "/../html:a";
 	
-	private static final String LINK = "//html:a";
+	/**
+	 * Ссылка на район
+	 */
+	private static final String EXPAND_DIV_LINK = 
+			".//html:div[contains(concat(' ', normalize-space(@class), ' '), ' expand-button ')]"
+			+ "/../html:a";
+	/**
+	 * Ссылка на город.
+	 */
+	private static final String LINK = ".//html:a";
 	
 	@Override
 	protected
-	void parseSelf() throws InterruptedException {
+	void parseSelf() throws InterruptedException, MalformedURLException {
 		//2.1 Получить все элементы
 		List<Element> tds = Main.queryXPathList(LOCATIONS_TD, dom.getRootElement());
 		for (Element el: tds) {
@@ -38,15 +45,20 @@ public class RespublicCrawler extends Crawler {
 			
 			if (expanded_link.size() > 0) {
 				// el - td, который содержит кнопочку "+", а expanded_link - ссылка на подгружаемую страницу
-				submit(new GKHLocationsPage(expanded_link.get(0).getAttributeValue("href"), this));
+				String relativeURL = expanded_link.get(0).getAttributeValue("href");
+				String fullURL = resolveLink(relativeURL).toExternalForm();
+				submit(new GKHLocationsPage(fullURL, this));
 				
 			} else {
 				// el - td, который содержит ссылку прямо на город
-				List<Element> link = Main.queryXPathList(LINK, el);
-				if (link.size() != 1) 
+				List<Element> direct_link = Main.queryXPathList(LINK, el);
+				if (direct_link.size() != 1) 
 					System.err.println("Not a single <A> link in unexpanded <TD> element");
-				else
-					results.add(link.get(0).getAttributeValue("href")); 
+				else {
+					String relativeURL = direct_link.get(0).getAttributeValue("href");
+					String fullURL = resolveLink(relativeURL).toExternalForm();
+					results.add(fullURL);
+				}
 			}
 		}
 	}
