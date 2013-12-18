@@ -81,9 +81,9 @@ public class XMLStorage {
 		for (String buildingURL: buildings) {
 			
 			Element el = cache.getElementForPage(buildingURL);
-			if (el == null || aliveTime<0)
+			if (el == null)
 				urlsToDownload.add(buildingURL);
-			else {
+			else if (aliveTime>=0) {
 				String strDate = el.getAttributeValue("downloaded");
 				DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
 				long buildingDate = fmt.parseDateTime(strDate).getMillis();

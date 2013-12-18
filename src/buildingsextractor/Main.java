@@ -41,6 +41,7 @@ public class Main {
 			System.out.println("Downloaded total of "+chuvashian_places.size()+" places.");
 			int counter = 1;
 			for (String place: chuvashian_places) {
+
 				System.out.println("Downloading data from town #"+counter+" ("+place+").");
 				results = new LinkedList<>();
 				Crawler crawler = new Crawler(place, results, 10);

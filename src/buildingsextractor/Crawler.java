@@ -174,8 +174,7 @@ public class Crawler extends PageDownloader {
 	void parseSelf() throws InterruptedException, MalformedURLException {
 		//2.1 Получить номер последней страницы пейджера
 		List<Element> result = Main.queryXPathList(PAGER_LAST_PAGE_LINK, dom.getRootElement());
-		assert (result.size() == 1);
-		int lastPage = Integer.decode(result.get(0).getText()); 
+		int lastPage = (result.size() == 0)? 1 : Integer.decode(result.get(0).getText()); 
 		
 		//2.2 Создать задания загрузки всех страниц пейджера
 		for (int i=1; i<=lastPage; i++) {
