@@ -2,6 +2,7 @@ package buildingsextractor;
 
 import java.net.MalformedURLException;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -65,6 +66,7 @@ public class Crawler extends PageDownloader {
 	 */
 	private ExecutorService executor;	
 
+	// Следующие переменные служат для отслеживания прогресса загрузок
 	private
 	int pageCounter = 1;
 	private	final
@@ -73,13 +75,21 @@ public class Crawler extends PageDownloader {
 	int updateGranula = 0;
 	private
 	long startingTime;
+	public 
+	int totalSubmitted = 0;
+	public 
+	int skipped = 0;
 
+	// Следующие переменные позволяют пропустить загрузку зданий, если они уже есть в кэше.
+//	private XMLStorage referenceStorage;
+//	private long referenceAliveTime;
+	
 	/**
 	 * Конструктор
 	 * @param stringURL - URL начальной страницы. Чтобы всё работало верно должен быть начальной страницей города:
 	 *  "http://www.reformagkh.ru/myhouse/list?tid=2358783"  -- для Чебоксар
-	 * @param results2
-	 * @param threadsNumber
+	 * @param results2 - куда выгружать результаты
+	 * @param threadsNumber - максимальное количество одновременных закачек
 	 */
 	@SuppressWarnings("unchecked")
 	public Crawler(String stringURL, Collection<?> results2, int threadsNumber) {
@@ -90,7 +100,31 @@ public class Crawler extends PageDownloader {
 		executor = Executors.newFixedThreadPool(threadsNumber);
 		assert (executor instanceof ThreadPoolExecutor);
 		submittedPairs = new ConcurrentLinkedQueue<>();
+//		referenceStorage = null;
 	}
+
+	/**
+	 * Конструктор с заданием кэша (для пропусков загрузок существующих данных)
+	 * @param stringURL - URL начальной страницы. Чтобы всё работало верно должен быть начальной страницей города:
+	 *  "http://www.reformagkh.ru/myhouse/list?tid=2358783"  -- для Чебоксар
+	 * @param results2 - куда выгружать результаты
+	 * @param threadsNumber - максимальное количество одновременных закачек
+	 * @param cacheStorage - хранит уже загруженные данные.
+	 * @param cacheAliveTime - таймаут валидности данных в кэше
+	 */
+//	@SuppressWarnings("unchecked")
+//	public Crawler(String stringURL, Collection<?> results2, int threadsNumber,
+//			XMLStorage cacheStorage, long cacheAliveTime) {
+//		super(stringURL);
+//		this.results = (Collection<Object>) results2;
+//		if (threadsNumber <= 0)
+//			threadsNumber = CORETHREADS_NUMBER;
+//		executor = Executors.newFixedThreadPool(threadsNumber);
+//		assert (executor instanceof ThreadPoolExecutor);
+//		submittedPairs = new ConcurrentLinkedQueue<>();
+//		referenceStorage = cacheStorage;
+//		referenceAliveTime = cacheAliveTime;
+//	}
 
 	/**
 	 * Метод для запуска полного всего цикла работы этого краулера. 
@@ -175,7 +209,17 @@ public class Crawler extends PageDownloader {
 		if (Thread.interrupted())
 			throw new InterruptedException();
 		
+		if (Main.referenceStorage != null) {
+			LinkedList<String> subm = new LinkedList<>();
+			subm.add(job.url.toExternalForm());
+			Collection<String> res = Main.referenceStorage.checkBuildingsExist(subm, Main.referenceAliveTime);
+			if (res.size() < 1) {
+				skipped++;
+				return;
+			}
+		}
 		submittedPairs.add(new JobFuturePair(job, executor.submit(job)));
+		totalSubmitted++;
 	}
 	
 	/**
@@ -189,7 +233,7 @@ public class Crawler extends PageDownloader {
 		long elapsed = (System.nanoTime() - startingTime)/1000_000_000;
 		if (pageCounter/updateGranularity != updateGranula) {
 			updateGranula = pageCounter/updateGranularity;
-			System.out.println("Downloaded: "+pageCounter+", queue: "+submittedPairs.size()+" pages. ["+elapsed+" seconds]");
+			System.out.println("Downloaded: "+pageCounter+", total: "+totalSubmitted+", skipped: "+skipped+" pages. ["+elapsed+" seconds]");
 		}
 	}
 		

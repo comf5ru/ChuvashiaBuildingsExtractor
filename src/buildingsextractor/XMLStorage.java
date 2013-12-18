@@ -5,9 +5,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map.Entry;
 
 import org.jdom2.Element;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
 /**
  * Класс для обработки множества объектов Building и сохранения их в файл. 
@@ -61,5 +65,34 @@ public class XMLStorage {
 			cache.addElementWithReplacement(e);
 		}
 		cache.saveCache();
+	}
+	
+	/**
+	 * Проверяет, существуют ли здания из списка в кэше (по их url). Опционально проверяет, как давно были
+	 * кэшированны данные.
+	 * @param buildings - список url искомых зданий.
+	 * @param aliveTime - интервал времени (в миллисекундах), когда данные считаются валидными. Величина -1 означает "игнорировать дату" 
+	 * - проверка будет осуществляться только по url.
+	 * @return Возвращает список зданий, которых нет в кэше, или данные о которых устарели.
+	 */
+	public
+	Collection<String> checkBuildingsExist(Collection<String> buildings, long aliveTime) {
+		LinkedList<String> urlsToDownload = new LinkedList<>();
+		for (String buildingURL: buildings) {
+			
+			Element el = cache.getElementForPage(buildingURL);
+			if (el == null || aliveTime<0)
+				urlsToDownload.add(buildingURL);
+			else {
+				String strDate = el.getAttributeValue("downloaded");
+				DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
+				long buildingDate = fmt.parseDateTime(strDate).getMillis();
+				DateTime dt = new DateTime(); // Сейчас
+				
+				if (buildingDate + aliveTime < dt.getMillis())
+					urlsToDownload.add(buildingURL);
+			}
+		}
+		return urlsToDownload;
 	}
 }

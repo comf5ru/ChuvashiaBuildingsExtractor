@@ -39,7 +39,9 @@ public class GKHLocationsPage extends PageJob {
 				System.err.println("[GKHLocationsPage] Cant resolve link ("+link.getAttributeValue("href")+") from ("+url+")");
 			}
 		}
-		jobMaster.report_finished();
+		if (jobMaster != null) 
+			jobMaster.report_finished();
+
 	}
 	
 	

@@ -51,8 +51,8 @@ public class GKHPagerPage extends PageJob {
 				e.printStackTrace();
 			} 
 		}
-		jobMaster.report_finished();
-
+		if (jobMaster != null) 
+			jobMaster.report_finished();
 	}
 	
 }
