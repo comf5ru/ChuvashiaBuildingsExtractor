@@ -18,25 +18,28 @@ import org.jdom2.xpath.XPathFactory;
  * Главный класс, будет запускать всю работу.
  */
 public class Main {
+	static final String chuvashia = "http://www.reformagkh.ru/myhouse?tid=2358768";
 
 	public static void main(String[] args) {
-		
-		String base = "http://www.reformagkh.ru/myhouse/view/6503414/?group=0";
-//		String base = "http://www.reformagkh.ru/myhouse/view/6663275/?group=0";
-//		String base = "http://www.reformagkh.ru/myhouse/view/6934099/?group=0";
-		System.out.println("Testing multi-word recognition: "+base);
-		
-		GKHBuildingPage p = new GKHBuildingPage(base, null);
-		p.run();
-		
-		System.out.println("Starting downloads from http://www.reformagkh.ru/myhouse/list?tid=2358783");
+		LinkedList<String> chuvashian_places = new LinkedList<>();
 		LinkedList<Building> results = new LinkedList<>();
-		Crawler crawler = new Crawler("http://www.reformagkh.ru/myhouse/list?tid=2358783", results, 10);
-		crawler.run();
+				
+		System.out.println("Downloading Chuvashia towns from "+chuvashia);
+		RespublicCrawler rc = new RespublicCrawler(chuvashia, chuvashian_places, 10);
+		rc.run();
 		
-//		for (Building b: results) 
-//			b.parse_data();
+		System.out.println();
+		System.out.println("Downloaded total of "+chuvashian_places.size()+" places.");
+		int counter = 1;
+		for (String place: chuvashian_places) {
+			System.out.println("Downloading data from town #"+counter+" ("+place+").");
+			Crawler crawler = new Crawler(place, results, 10);
+			crawler.run();
+			System.out.println();
+			counter++;
+		}
 		
+		System.out.println("Parsing data to XML file...");
 		XMLStorage s;
 		try {
 			s = new XMLStorage("Buildings_Chuvashia.xml", true);

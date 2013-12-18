@@ -46,14 +46,13 @@ public class GKHPagerPage extends PageJob {
 				buildingURLs.add(targetURLString);
 				if (jobMaster != null)
 					jobMaster.submit(new GKHBuildingPage(targetURLString, jobMaster));
-			} catch (MalformedURLException e) {
+			} catch (MalformedURLException | InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			} 
 		}
+		jobMaster.report_finished();
+
 	}
 	
 }

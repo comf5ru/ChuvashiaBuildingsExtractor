@@ -6,7 +6,8 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({ TestCrawler.class, TestGKHBuildingPage.class,
-		TestGKHPagerPage.class, TestPageDownloader.class, TestXMLStorage.class })
+		TestGKHPagerPage.class, TestPageDownloader.class,
+		TestRespublicCrawler.class, TestXMLStorage.class })
 public class AllTests {
 
 }

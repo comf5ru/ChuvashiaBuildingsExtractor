@@ -26,6 +26,7 @@ public class GKHBuildingPage extends PageJob {
 		DateTime dt = new DateTime();
 		DateTimeFormatter fmt = ISODateTimeFormat.dateTime();
 		building = new Building(url.toExternalForm(), dom, fmt.print(dt));
+		jobMaster.report_finished();
 	}
 
 	

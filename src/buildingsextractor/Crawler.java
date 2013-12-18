@@ -65,6 +65,15 @@ public class Crawler extends PageDownloader {
 	 */
 	private ExecutorService executor;	
 
+	private
+	int pageCounter = 1;
+	private	final
+	int updateGranularity = 10;
+	private
+	int updateGranula = 0;
+	private
+	long startingTime;
+
 	/**
 	 * Конструктор
 	 * @param stringURL - URL начальной страницы. Чтобы всё работало верно должен быть начальной страницей города:
@@ -100,22 +109,14 @@ public class Crawler extends PageDownloader {
 			// wait until all the jobs are finished before returning.
 			
 			//3.0 Total pages estimate;
-			int pageCounter = 1;
-			int updateGranularity = 10;
-			int updateGranula = 0;
-			long startingTime = System.nanoTime();
+			pageCounter = 1;
+			updateGranula = 0;
+			startingTime = System.nanoTime();
 			while (!submittedPairs.isEmpty()) {
-				// check if needs updating
-				long elapsed = (System.nanoTime() - startingTime)/1000_000_000;
-				if (pageCounter/updateGranularity != updateGranula) {
-					updateGranula = pageCounter/updateGranularity;
-					System.out.println("Downloaded: "+pageCounter+", queue: "+submittedPairs.size()+" pages. ["+elapsed+" seconds]");
-				}
 				Future<?> headFuture = submittedPairs.peek().future; 
 				// Отправка задания Future на выполнение (скачивание и далее).
 				// Результат в сооветствующем объекте submittedPairs.peek().job 
 				headFuture.get(); // can't use awaitTermination, because jobs are submitting other jobs
-				pageCounter++;
 				proccessFinished(submittedPairs.poll()); // no synch with peek and isEmpty is needed as all elements are added to the tail and only this thread is running task removal.
 			}
 		
@@ -152,7 +153,7 @@ public class Crawler extends PageDownloader {
 	}
 	
 	/**
-	 * Собрать результат после завершения работы в параллельном треде. 
+	 * Собрать результат после завершения работы в параллельном треде. Вызывается "когда-то" после завершения работы. 
 	 * @param finishedPair
 	 */
 	protected
@@ -177,4 +178,19 @@ public class Crawler extends PageDownloader {
 		submittedPairs.add(new JobFuturePair(job, executor.submit(job)));
 	}
 	
+	/**
+	 * Функция сообщения об окончании загрузки одной страницы.
+	 * Вызывается из параллельного треда СРАЗУ после завершения загрузки (перед окончанием работы вызывающего треда).
+	 */
+	public synchronized 
+	void report_finished() {
+		pageCounter++;
+		// check if needs updating
+		long elapsed = (System.nanoTime() - startingTime)/1000_000_000;
+		if (pageCounter/updateGranularity != updateGranula) {
+			updateGranula = pageCounter/updateGranularity;
+			System.out.println("Downloaded: "+pageCounter+", queue: "+submittedPairs.size()+" pages. ["+elapsed+" seconds]");
+		}
+	}
+		
 }
