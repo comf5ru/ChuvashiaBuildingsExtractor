@@ -30,7 +30,6 @@ import java.util.logging.Logger;
  * @author A.Cerbic
  */
 public class XMLCache {
-	//TODO: revert this to "/root/%NODENAME[@url='%s']" and fix testing cases to overload bakeAPage()
 	private static final String ELEMENT_BY_URL_XPATH = "/root/*[@url='%s']";
 
 	/**
@@ -40,7 +39,7 @@ public class XMLCache {
 	
 	private Path xmlFile; //effectively final
 	
-	private final Document doc;
+	protected final Document doc;
 	
 	/**
 	 * Loads file and parses it into org.jdom2.Document
@@ -115,7 +114,7 @@ public class XMLCache {
 	 * @param doc - JDOM Document or Element
 	 * @return List of found matches, may be of zero size if nothing is found
 	 */
-	private
+	protected final
 	List<Element> queryXPathList(String query) {
 		if (query == null) return new ArrayList<Element>(0);
 		try {

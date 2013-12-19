@@ -57,9 +57,8 @@ public class XMLStorage {
 			e.setAttribute("downloaded", b.pageDownloadDate);
 			
 			for (Entry<Object, Object> entry: b.data.entrySet()) {
-				Element value = new Element("Dataentry");
-				value.setAttribute("name", (String)entry.getKey());
-				value.setAttribute("value", (String)entry.getValue());
+				Element value = new Element((String)entry.getKey());
+				value.setText((String)entry.getValue());
 				e.addContent(value);
 			}
 			cache.addElementWithReplacement(e);

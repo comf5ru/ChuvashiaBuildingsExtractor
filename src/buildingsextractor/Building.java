@@ -1,6 +1,8 @@
 package buildingsextractor;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -73,16 +75,28 @@ public class Building {
 	/**
 	 * Имена полей для подстановки в XPath для поиска на странице дома
 	 */
-	static final String[] parsedLines = {
-		"Год ввода в эксплуатацию",
-		"Этажность",
-		"Количество подъездов",
-		"Количество лифтов",
-		"Материал стен",
-		"Количество квартир"
-	};
+//	static final String[] parsedLines = {
+//		"Год ввода в эксплуатацию",
+//		"Этажность",
+//		"Количество подъездов",
+//		"Количество лифтов",
+//		"Материал стен",
+//		"Количество квартир"
+//	};
 	
-
+	static final private
+	Map<String,String> parsedData;
+	static {
+		parsedData = new HashMap<>();
+		parsedData.put("Год ввода в эксплуатацию", "expl_year");
+		parsedData.put("Этажность","floors");
+		parsedData.put("Количество подъездов","porches");
+		parsedData.put("Количество лифтов","lifts");
+		parsedData.put("Материал стен","walls");
+		parsedData.put("Количество квартир","flats");
+	}
+	
+	
 	/**
 	 * Получает данные из загруженной страницы: dom -> data
 	 * @param dom 
@@ -92,14 +106,14 @@ public class Building {
 		Properties var = new Properties();
 
 		// для каждого искомого свойства в таблице
-		for (String lineText: parsedLines) {
+		for (Map.Entry<String,String> lineText: parsedData.entrySet()) {
 			// устанавливаем переменную в XPath
-			var.setProperty("textval", Main.UTF8_encode(lineText));
+			var.setProperty("textval", Main.UTF8_encode(lineText.getKey()));
 			// запрашиваем XPath
 			result = Main.queryXPathList(VAR_RECORD_TD, dom.getRootElement(), var);
 			if (result.size()>0)
 				// сохраняем полученный результат
-				data.setProperty(lineText, Main.UTF8_decode(result.get(0).getText()));
+				data.setProperty(lineText.getValue(), Main.UTF8_decode(result.get(0).getText()));
 		}
 		
 		// теперь отдельно парсим адрес дома
@@ -108,15 +122,24 @@ public class Building {
 			return;
 		String fullAddress = Main.UTF8_decode(result.get(0).getText());
 		
+		fullAddress = fullAddress.trim();
+		fullAddress = fullAddress.replace(',',' ');
+		fullAddress = fullAddress.replace('\t',' ');
+		fullAddress = fullAddress.replace("Улица", "ул");
+		
 		// общий вид:
 		//  (сокращение_населённого_пункта Название Нас. Пункта)( сокр_улицы_бульвара_итп Название Улицы И Т П)? д.нумерация_дома
-		Pattern regexp = Pattern.compile("^(\\S+(?:\\s+[^\\p{javaLowerCase}]\\S*)+)(?:\\s+(.+)|)\\sд\\.(.*)$"); // не получилось использовать (...)? для улицы. Пришлось применять обходной путь (...|)
+//		Pattern regexp = Pattern.compile("^(\\S+(?:\\s+[^\\p{javaLowerCase}]\\S*)+)(?:\\s+(.+)|)\\sд\\.(.*)$"); // не получилось использовать (...)? для улицы. Пришлось применять обходной путь (...|)
+		Pattern regexp = Pattern.compile("^([^ .]+(?:[ .]+[\\p{javaUpperCase}]\\S*)+)(?:\\s+(.+)\\b|)\\s+д\\.(.*)$"); // не получилось использовать (...)? для улицы. Пришлось применять обходной путь (...|)
 		Matcher m = regexp.matcher(fullAddress);
 		if (m.matches()) {
-			data.setProperty("Населённый пункт", m.group(1)); // Включает сокращения "г ", "с ", "п "...
+			//"Населённый пункт"
+			data.setProperty("location", m.group(1)); // Включает сокращения "г ", "с ", "п "...
 			if (m.group(2)!=null && m.group(2).length()>0)
-				data.setProperty("Улица", m.group(2)); // включает сокращения типа "ул ", "пер ", "мкр " и т.п.
-			data.setProperty("Номер дома", m.group(3)); // может включать литеры, корпус и т.п.
+				//"Улица"
+				data.setProperty("street", m.group(2)); // включает сокращения типа "ул ", "пер ", "мкр " и т.п.
+			//"Номер дома"
+			data.setProperty("building_number", m.group(3)); // может включать литеры, корпус и т.п.
 		} else 
 			System.err.println("Can't parse building address for page: "+pageURL+", string: "+fullAddress);
 	}
