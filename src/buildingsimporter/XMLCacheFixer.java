@@ -23,13 +23,14 @@ public class XMLCacheFixer extends XMLCache {
 	private static final String ALL_BUILDINGS_FOR_ADDRESS = "/root/Building[1=1 %s]";	
 	public void kill_duplicates() {
 		Element root = doc.getRootElement();
+		Element newRoot = new Element("root");
 		
 		Collection<Element> allBuildings = queryXPathList(ALL_BUILDINGS);
 		int counter = allBuildings.size();
 		System.out.println("About to go cray in this mess!");
 
 		for (Element buildingElement: allBuildings) {
-			if (counter--%100 ==0 )
+			if (--counter%100 ==0 )
 				System.out.println(counter);
 			
 			if (buildingElement.getParent() == null) 
@@ -40,37 +41,54 @@ public class XMLCacheFixer extends XMLCache {
 			String location = buildingElement.getChildText("location");
 			String bnum = buildingElement.getChildText("building_number");
 			
-			String conditions = "";
-			if ((location == null) || (street == null) || (bnum == null))
+			if ((location == null) || (bnum == null))
 				System.out.println("Something is missing! "+buildingElement.getAttributeValue("url")
 						+" : "+location+"|"+street+"|"+bnum);
-				
-			if (location == null) location = "";
-			if (street == null) street = "";
-			if (bnum == null) bnum = "";
-			conditions += "and location='"+location+"'";
-			conditions += "and street='"+street+"'";
-			conditions += "and building_number='"+bnum+"'";
+
+			// коррекци€ запроса с учЄтом возможной неполноты данных
+			String conditions = "";
+			if (location != null) 
+				conditions += "and location='"+location+"'";
+			if (street != null) 
+				conditions += "and street='"+street+"'";
+			if (bnum != null) 
+				conditions += "and building_number='"+bnum+"'";
 			
-			Collection<Element> sameStreet = queryXPathList(String.format(ALL_BUILDINGS_FOR_ADDRESS, conditions));
+			// ¬се дома с идентичным адресом
+			Collection<Element> sameAddress = queryXPathList(String.format(ALL_BUILDINGS_FOR_ADDRESS, conditions));
 			
-			if (sameStreet.size() > 1) {
-				System.out.println(location + " " + street + " " + bnum + ": " + sameStreet.size());
-				for (Element buildingSS: sameStreet) {
-					buildingSS.detach();
+			if (sameAddress.size() > 1) {
+				System.out.println(location + " " + street + " " + bnum + ": " + sameAddress.size());
+				// собираем в кучку все данные с записей о домах с совпадающим адресом.
+				Element combined = new Element("Building");
+				for (Element buildingSA: sameAddress) {
+					buildingSA.detach();
+					List<Element> properties = buildingSA.getChildren();
+					for (Element p: properties) {
+						String name = p.getName();
+						String value = p.getText();
+						if (value.equals("нет данных") || value.isEmpty())
+							continue;
+						Element updatedProperty = combined.getChild(name);
+						if (updatedProperty == null) {
+							updatedProperty = new Element(name);
+							combined.addContent(updatedProperty);
+						}
+						updatedProperty.setText(value);
+					}
 				}
-			} else if (sameStreet.size() == 0) {
+				newRoot.addContent(combined);
+			} else if (sameAddress.size() == 0) {
 				System.out.println("WHoopsy-daisy! where did it go? " + location + "-" + street + "-" + bnum);
+			} else {
+				// только один дом дл€ данного адреса
+				buildingElement.detach();
+				newRoot.addContent(buildingElement);
 			}
 			
-		}
-//		for (Element current: oldCachedElements) 
-//			current.detach();
-//
-//		root.addContent((Element)e.clone());
-//		
-//		String searchXPath = String.format(ELEMENT_BY_URL_XPATH, pageURL);
-//		List<Element> result = queryXPathList(searchXPath);
-		//result.size()>0?(Element)result.get(0).clone():null; 
+		} // for allBuildings
+		
+		assert(root.getChildren().size() == 0);
+		doc.setRootElement(newRoot);
 	}
 }

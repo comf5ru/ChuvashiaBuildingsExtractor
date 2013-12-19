@@ -3,6 +3,7 @@ package buildingsextractor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -22,31 +23,38 @@ public class Main {
 	static public XMLStorage referenceStorage;
 	public static long referenceAliveTime;
 
+	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 		try {
 			// Загружаем существующие данные из файла
 			referenceStorage = new XMLStorage("Buildings_Chuvashia.xml", false);
 			referenceAliveTime = -1;
 			
-			LinkedList<String> chuvashian_places = new LinkedList<>();
-			LinkedList<Building> results;
+			Collection<Object> chuvashian_places = new LinkedList<>();
 					
 			// Получаем данные по всем городам и весям Чувашии
 			System.out.println("Downloading Chuvashia towns from "+chuvashia);
-			RespublicCrawler rc = new RespublicCrawler(chuvashia, chuvashian_places, 10);
+			RespublicCrawler rc = new RespublicCrawler(chuvashia, 10);
 			rc.run();
+			chuvashian_places = rc.results;
 			
 			// По каждому городу загружаем дома
 			System.out.println();
 			System.out.println("Downloaded total of "+chuvashian_places.size()+" places.");
 			int counter = 1;
-			for (String place: chuvashian_places) {
+			Collection<Building> results;
+			for (Object o_place: chuvashian_places) {
+				
+				Properties place = (Properties)o_place;
 
 				System.out.println("Downloading data from town #"+counter+" ("+place+").");
-				results = new LinkedList<>();
-				Crawler crawler = new Crawler(place, results, 10);
+//				results = new LinkedList<>();
+				Crawler crawler = new Crawler(place.getProperty("url"), 10, place);
 				crawler.run();
 				
+				@SuppressWarnings("rawtypes")
+				Collection x = crawler.results; 
+				results = x;
 				System.out.println("Finished downloading from town #"+counter+". Total: "+crawler.totalSubmitted+", skipped: "+crawler.skipped);
 				// Сохраняем дома в файл
 				System.out.println();
@@ -130,5 +138,11 @@ public class Main {
 	String UTF8_encode(String source) {
 		byte[] bArray = source.getBytes(StandardCharsets.UTF_8);
 		return new String(bArray);
+	}
+	
+	public final static
+	String sanitizeString(String source) {
+		String res = source.replace("\\n", " ").replace("\\r", " ").replace("\\t", " ");
+		return res.trim();
 	}
 }

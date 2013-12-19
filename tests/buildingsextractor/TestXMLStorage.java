@@ -27,7 +27,7 @@ public class TestXMLStorage {
 
 		public PickyCrawler(String stringURL, Collection<Building> results,
 				int threadsNumber) {
-			super(stringURL, results, threadsNumber);
+			super(stringURL, threadsNumber,null);
 			queue = new LinkedList<>();
 		}
 
@@ -109,6 +109,7 @@ public class TestXMLStorage {
 	}
 	
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
 	public void testSaveOnePageBuildings() throws InterruptedException, IOException {
 		LinkedList<Building> result = new LinkedList<>();
@@ -116,12 +117,13 @@ public class TestXMLStorage {
 		cr.submitForce(new GKHPagerPage("http://www.reformagkh.ru/myhouse/list?tid=2358783&page=2", cr));
 		cr.run();
 		
-		assertEquals("Не 10 домов на страницу", 10, result.size());
+		assertEquals("Не 10 домов на страницу", 10, cr.results.size());
 //		for (Building b: result) 
 //			b.parse_data();
 		
 		XMLStorage s = new XMLStorage(tmpfilename, true);
-		s.saveBuildings(result);
+		Collection x = cr.results;
+		s.saveBuildings(x);
 		Path file = Paths.get(tmpfilename);
 		assertTrue("File was not created", Files.exists(file));
 		

@@ -72,11 +72,30 @@ public class TestGKHBuildingPage {
 	}
 	
 	@Test
-	public void testWeidStreetNames() {
+	public void testCorruptedStreetNames() {
 		GKHBuildingPage bp = new GKHBuildingPage("http://www.reformagkh.ru/myhouse/view/7600455/?group=0", null);
 		bp.run();
 		assertEquals("г Чебоксары",bp.building.data.getProperty("location"));
 		assertEquals("ул Семена Ислюкова",bp.building.data.getProperty("street"));
 		assertEquals("10",bp.building.data.getProperty("building_number"));
 	}
+	
+	@Test
+	public void testParenthesizedStreetNames() {
+		GKHBuildingPage bp = new GKHBuildingPage("http://www.reformagkh.ru/myhouse/view/7639182/?group=0", null);
+		bp.run();
+		assertEquals("г Чебоксары",bp.building.data.getProperty("location"));
+		assertEquals("ул Восточная (п Восточный)",bp.building.data.getProperty("street"));
+		assertEquals("18",bp.building.data.getProperty("building_number"));
+	}
+	
+	@Test
+	public void testMoreStrangeStreetNames() {
+		GKHBuildingPage bp = new GKHBuildingPage("http://www.reformagkh.ru/myhouse/view/8186304/?group=0", null);
+		bp.run();
+		assertEquals("г Чебоксары",bp.building.data.getProperty("location"));
+		assertEquals("ул Гагарина Ю.",bp.building.data.getProperty("street"));
+		assertEquals("22",bp.building.data.getProperty("building_number"));
+	}	
+	
 }

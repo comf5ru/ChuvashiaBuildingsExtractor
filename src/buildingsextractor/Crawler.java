@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -20,6 +21,8 @@ import org.jdom2.Element;
  * 
  * Создаёт и контроллирует множество подчинённых объектов PageDownloader, работающих параллельно 
  * (multi-threading).
+ * 
+ * Конструктор получает URL города, results содержит набор Buildings
  */
 public class Crawler extends PageDownloader {
 	
@@ -33,9 +36,11 @@ public class Crawler extends PageDownloader {
 			+ "//html:a";
 	
 	/**
-	 * Ссылка на внешнее хранилище, куда будут сохраняться созданные объекты из страниц
+	 * Сюда будут сохраняться созданные объекты из страниц. Не поддерживает параллельного доступа 
+	 * (все операции чтение-запись должно происходить из одного потока). После выполнения run() содержимое больше
+	 * меняться не должно.  
 	 */
-	protected final Collection<Object> results;
+	public final Collection<Object> results;
 	
 	/**
 	 * Just a vector of objects {PageDownloader, Future<?>}, where Future is generated for said downloader.
@@ -67,64 +72,33 @@ public class Crawler extends PageDownloader {
 	private ExecutorService executor;	
 
 	// Следующие переменные служат для отслеживания прогресса загрузок
-	private
-	int pageCounter = 1;
-	private	final
-	int updateGranularity = 10;
-	private
-	int updateGranula = 0;
-	private
-	long startingTime;
-	public 
-	int totalSubmitted = 0;
-	public 
-	int skipped = 0;
+	private int pageCounter = 1;
+	private	final int updateGranularity = 10;
+	private int updateGranula = 0;
+	private	long startingTime;
+	public int totalSubmitted = 0;
+	public int skipped = 0;
 
-	// Следующие переменные позволяют пропустить загрузку зданий, если они уже есть в кэше.
-//	private XMLStorage referenceStorage;
-//	private long referenceAliveTime;
-	
+	/**
+	 * Свойства, которые будут добавленны к каждому объекту Building
+	 */
+	private Properties commonProperties;
 	/**
 	 * Конструктор
 	 * @param stringURL - URL начальной страницы. Чтобы всё работало верно должен быть начальной страницей города:
 	 *  "http://www.reformagkh.ru/myhouse/list?tid=2358783"  -- для Чебоксар
-	 * @param results2 - куда выгружать результаты
 	 * @param threadsNumber - максимальное количество одновременных закачек
 	 */
-	@SuppressWarnings("unchecked")
-	public Crawler(String stringURL, Collection<?> results2, int threadsNumber) {
+	public Crawler(String stringURL, int threadsNumber, Properties props) {
 		super(stringURL);
-		this.results = (Collection<Object>) results2;
+		results = new LinkedList<>();
 		if (threadsNumber <= 0)
 			threadsNumber = CORETHREADS_NUMBER;
 		executor = Executors.newFixedThreadPool(threadsNumber);
 		assert (executor instanceof ThreadPoolExecutor);
 		submittedPairs = new ConcurrentLinkedQueue<>();
-//		referenceStorage = null;
+		commonProperties = props;
 	}
-
-	/**
-	 * Конструктор с заданием кэша (для пропусков загрузок существующих данных)
-	 * @param stringURL - URL начальной страницы. Чтобы всё работало верно должен быть начальной страницей города:
-	 *  "http://www.reformagkh.ru/myhouse/list?tid=2358783"  -- для Чебоксар
-	 * @param results2 - куда выгружать результаты
-	 * @param threadsNumber - максимальное количество одновременных закачек
-	 * @param cacheStorage - хранит уже загруженные данные.
-	 * @param cacheAliveTime - таймаут валидности данных в кэше
-	 */
-//	@SuppressWarnings("unchecked")
-//	public Crawler(String stringURL, Collection<?> results2, int threadsNumber,
-//			XMLStorage cacheStorage, long cacheAliveTime) {
-//		super(stringURL);
-//		this.results = (Collection<Object>) results2;
-//		if (threadsNumber <= 0)
-//			threadsNumber = CORETHREADS_NUMBER;
-//		executor = Executors.newFixedThreadPool(threadsNumber);
-//		assert (executor instanceof ThreadPoolExecutor);
-//		submittedPairs = new ConcurrentLinkedQueue<>();
-//		referenceStorage = cacheStorage;
-//		referenceAliveTime = cacheAliveTime;
-//	}
 
 	/**
 	 * Метод для запуска полного всего цикла работы этого краулера. 
@@ -140,12 +114,12 @@ public class Crawler extends PageDownloader {
 			parseSelf();
 			
 			//3. loop until all the objects are finished.
-			// wait until all the jobs are finished before returning.
-			
-			//3.0 Total pages estimate;
+			//3.0 Счётчики;
 			pageCounter = 1;
 			updateGranula = 0;
 			startingTime = System.nanoTime();
+			
+			// wait until all the jobs are finished before returning.
 			while (!submittedPairs.isEmpty()) {
 				Future<?> headFuture = submittedPairs.peek().future; 
 				// Отправка задания Future на выполнение (скачивание и далее).
@@ -192,8 +166,14 @@ public class Crawler extends PageDownloader {
 	protected
 	void proccessFinished(JobFuturePair finishedPair) {
 		// Если finishedPair - объект загрузки дома, то присоединить дом к результатам.
-		if (finishedPair.job instanceof GKHBuildingPage) 
-			results.add(((GKHBuildingPage)finishedPair.job).building);
+		if (finishedPair.job instanceof GKHBuildingPage) {
+			Building resB = ((GKHBuildingPage)finishedPair.job).building;
+			if (commonProperties != null)
+				for (String propName: commonProperties.stringPropertyNames())
+					resB.data.setProperty(propName, commonProperties.getProperty(propName));
+				
+			results.add(resB);
+		}
 	}
 	
 	/**

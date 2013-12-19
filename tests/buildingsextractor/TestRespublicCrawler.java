@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Properties;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -23,9 +24,8 @@ public class TestRespublicCrawler {
 		public LinkedList<String> queueURLS;
 		public int submitsLeft;
 
-		public ParalyzedCrawler(String stringURL, Collection<Building> results,
-				int threadsNumber, int allowSubmits) {
-			super(stringURL, results, threadsNumber);
+		public ParalyzedCrawler(String stringURL, int threadsNumber, int allowSubmits) {
+			super(stringURL, threadsNumber);
 			queue = new LinkedList<>();
 			queueURLS = new LinkedList<>();
 			submitsLeft = allowSubmits;
@@ -63,7 +63,7 @@ public class TestRespublicCrawler {
 	@Before
 	public void setUp() throws Exception {
 		result = new LinkedList<Building>();
-		paralyzedCrawler = new ParalyzedCrawler("http://www.reformagkh.ru/myhouse?tid=2358768",result,4, 0); 
+		paralyzedCrawler = new ParalyzedCrawler("http://www.reformagkh.ru/myhouse?tid=2358768",4, 0); 
 	}
 
 	@After
@@ -73,11 +73,19 @@ public class TestRespublicCrawler {
 	@Test
 	public void testRunBasePage() {
 		paralyzedCrawler.run();
+		Collection<Object> result = paralyzedCrawler.results;
 		assertEquals(5, result.size());
 		assertNotEquals(0,paralyzedCrawler.queue.size());
 		assertEquals(paralyzedCrawler.queueURLS.size(),paralyzedCrawler.queue.size());
-		assertTrue(result.contains("http://www.reformagkh.ru/myhouse/list?tid=2358785"));
-		assertTrue(result.contains("http://www.reformagkh.ru/myhouse/list?tid=2358787"));
+		boolean found1=false; boolean found2=false;
+		for(Object p: result) {
+			Properties prop = (Properties) p;
+			if (prop.getProperty("url").equals("http://www.reformagkh.ru/myhouse/list?tid=2358785"))
+				found1 = true;
+			if (prop.getProperty("url").equals("http://www.reformagkh.ru/myhouse/list?tid=2358787"))
+				found2 = true;
+		}
+		assertTrue(found1 && found2);
 		assertTrue(paralyzedCrawler.queueURLS.contains("http://www.reformagkh.ru/myhouse?tid=2358782&sort=alphabet&item=mkd"));
 	}
 

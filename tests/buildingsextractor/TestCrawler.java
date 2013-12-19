@@ -23,9 +23,8 @@ public class TestCrawler {
 		public LinkedList<PageDownloader> queue;
 		public int submitsLeft;
 
-		public ParalyzedCrawler(String stringURL, Collection<Building> results,
-				int threadsNumber, int allowSubmits) {
-			super(stringURL, results, threadsNumber);
+		public ParalyzedCrawler(String stringURL, int threadsNumber, int allowSubmits) {
+			super(stringURL, threadsNumber, null);
 			queue = new LinkedList<>();
 			submitsLeft = allowSubmits;
 		}
@@ -58,8 +57,7 @@ public class TestCrawler {
 
 	@Before
 	public void setUp() throws Exception {
-		result = new LinkedList<Building>();
-		paralyzedCrawler = new ParalyzedCrawler("http://www.reformagkh.ru/myhouse/list?tid=2358783",result,4, 0);
+		paralyzedCrawler = new ParalyzedCrawler("http://www.reformagkh.ru/myhouse/list?tid=2358783", 4, 0);
 	}
 
 	@After
@@ -80,7 +78,7 @@ public class TestCrawler {
 
 	@Test
 	public void testPagerPageSubmits() {
-		paralyzedCrawler = new ParalyzedCrawler("http://www.reformagkh.ru/myhouse/list?tid=2358783",result,4, 2);
+		paralyzedCrawler = new ParalyzedCrawler("http://www.reformagkh.ru/myhouse/list?tid=2358783", 4, 2);
 		paralyzedCrawler.run();
 		
 		assertNotNull(paralyzedCrawler.queue);

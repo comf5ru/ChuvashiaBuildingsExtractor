@@ -1,8 +1,8 @@
 package buildingsextractor;
 
 import java.net.MalformedURLException;
-import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 
 import org.jdom2.Element;
 
@@ -10,13 +10,13 @@ import org.jdom2.Element;
  * ¬ отличие от предка, эта модификаци€ паука предназначена дл€ обработки страницы региона (республики) и
  * сбора информации о городах (населЄнных пунктах), которые уже будут, в свою очередь, использованы
  * дл€ запуска Crawler
- *
+ * ѕолучает URL республики, cохран€ет в results список наборов Properties с ключами {"url", "areaName", "locationName"},
+ * где url - адрес страницы населЄнного пункта 
  */
 public class RespublicCrawler extends Crawler {
 
-	public RespublicCrawler(String stringURL, Collection<?> results,
-			int threadsNumber) {
-		super(stringURL, results, threadsNumber);
+	public RespublicCrawler(String stringURL, int threadsNumber) {
+		super(stringURL, threadsNumber, null);
 	}
 
 	/**
@@ -46,9 +46,9 @@ public class RespublicCrawler extends Crawler {
 			if (expanded_link.size() > 0) {
 				// el - td, который содержит кнопочку "+", а expanded_link - ссылка на подгружаемую страницу
 				String relativeURL = expanded_link.get(0).getAttributeValue("href");
+				String areaName = Main.UTF8_decode(expanded_link.get(0).getText());
 				String fullURL = resolveLink(relativeURL).toExternalForm();
-				submit(new GKHLocationsPage(fullURL, this));
-				
+				submit(new GKHLocationsPage(fullURL, this, Main.sanitizeString(areaName)));
 			} else {
 				// el - td, который содержит ссылку пр€мо на город
 				List<Element> direct_link = Main.queryXPathList(LINK, el);
@@ -57,7 +57,12 @@ public class RespublicCrawler extends Crawler {
 				else {
 					String relativeURL = direct_link.get(0).getAttributeValue("href");
 					String fullURL = resolveLink(relativeURL).toExternalForm();
-					results.add(fullURL);
+					
+					Properties resProps = new Properties();
+					String locationName = Main.UTF8_decode(direct_link.get(0).getText());
+					resProps.setProperty("locationName", Main.sanitizeString(locationName));
+					resProps.setProperty("url", fullURL);
+					results.add(resProps);
 				}
 			}
 		}
