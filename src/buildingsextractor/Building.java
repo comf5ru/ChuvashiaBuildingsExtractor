@@ -126,10 +126,10 @@ public class Building {
 		fullAddress = fullAddress.replace(',',' ');
 		fullAddress = fullAddress.replace('\t',' ');
 		fullAddress = fullAddress.replace("Улица", "ул");
+		fullAddress = fullAddress.replaceAll(".\\?","И"); // поправка ошибки в JDOM2 при чтении кириллицы
 		
 		// общий вид:
 		//  (сокращение_населённого_пункта Название Нас. Пункта)( сокр_улицы_бульвара_итп Название Улицы И Т П)? д.нумерация_дома
-//		Pattern regexp = Pattern.compile("^(\\S+(?:\\s+[^\\p{javaLowerCase}]\\S*)+)(?:\\s+(.+)|)\\sд\\.(.*)$"); // не получилось использовать (...)? для улицы. Пришлось применять обходной путь (...|)
 		Pattern regexp = Pattern.compile("^([^ .]+(?:[ .]+[\\p{javaUpperCase}]\\S*)+)(?:\\s+(.+)\\b|)\\s+д\\.(.*)$"); // не получилось использовать (...)? для улицы. Пришлось применять обходной путь (...|)
 		Matcher m = regexp.matcher(fullAddress);
 		if (m.matches()) {
