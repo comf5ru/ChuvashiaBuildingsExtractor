@@ -143,6 +143,7 @@ public class Main {
 	public final static
 	String sanitizeString(String source) {
 		String res = source.replace("\\n", " ").replace("\\r", " ").replace("\\t", " ");
+		res = res.replaceAll(".\\?","И"); // поправка ошибки в JDOM2 при чтении кириллицы
 		return res.trim();
 	}
 }
