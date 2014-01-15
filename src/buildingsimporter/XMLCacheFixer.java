@@ -38,13 +38,14 @@ public class XMLCacheFixer extends XMLCache {
 				System.out.println(counter);
 			
 			if (buildingElement.getParent() == null) 
-				continue; // already detached earlier
+				continue; // already detached earlier - т.е. адрес совпал с кем-то предыдущим и был обработан.
 			
 			//location='%s' and street='%s' and building_number='%s'
 			String street = buildingElement.getChildText("street");
 			String location = buildingElement.getChildText("location");
 			String bnum = buildingElement.getChildText("building_number");
 			
+			// нет дома или нас.пункта
 			if ((location == null) || (bnum == null))
 				System.out.println("Something is missing! "+buildingElement.getAttributeValue("url")
 						+" : "+location+"|"+street+"|"+bnum);
@@ -62,7 +63,7 @@ public class XMLCacheFixer extends XMLCache {
 			Collection<Element> sameAddress = queryXPathList(String.format(ALL_BUILDINGS_FOR_ADDRESS, conditions));
 			
 			if (sameAddress.size() > 1) {
-				System.out.println(location + " " + street + " " + bnum + ": " + sameAddress.size());
+				System.out.println("Same address buildings <" +location+ " " + street + " " + bnum + ">: " + sameAddress.size());
 				// собираем в кучку все данные с записей о домах с совпадающим адресом.
 				Element combined = new Element("Building");
 				for (Element buildingSA: sameAddress) {
@@ -72,13 +73,13 @@ public class XMLCacheFixer extends XMLCache {
 						String name = p.getName();
 						String value = p.getText();
 						if (value.equals("нет данных") || value.isEmpty())
-							continue;
+							continue; //не обновл€ть пустыми данными
 						Element updatedProperty = combined.getChild(name);
 						if (updatedProperty == null) {
 							updatedProperty = new Element(name);
 							combined.addContent(updatedProperty);
 						}
-						updatedProperty.setText(value);
+						updatedProperty.setText(value); //обновить
 					}
 				}
 				newRoot.addContent(combined);
@@ -96,6 +97,10 @@ public class XMLCacheFixer extends XMLCache {
 		doc.setRootElement(newRoot);
 	}
 
+	/**
+	 * ѕолучить список всех районов „увашии
+	 * @return Collection<String> - названи€ районов.
+	 */
 	public Collection<String> getAllAreas() {
 		Collection<Element> allBuildings = queryXPathList(ALL_BUILDINGS);
 		int counter = allBuildings.size();
@@ -244,7 +249,7 @@ public class XMLCacheFixer extends XMLCache {
 	 * ‘ункци€ "умного" сравнени€ двух строк. ѕор€док строк важен, можно сказать, что ищетс€ "похожесть" строки2 на строку1. 
 	 * @param str1 - перва€ строка
 	 * @param str2 - втора€ строка
-	 * @return оценка похожести в процентах 0..100, чем больше - тем строки более похожи.
+	 * @return оценка похожести в процентах 0..100, чем больше - тем более строки похожи.
 	 */
 	static
 	int likeness(String str1, String str2) {
@@ -274,9 +279,10 @@ public class XMLCacheFixer extends XMLCache {
 	 * ”далить дома, где нет данных.
 	 */
 	public void dropEmpty() {
+		int emptyDataBuildingsCounter = 0;
 		Collection<Element> allBuildings = queryXPathList(ALL_BUILDINGS);
 		int counter = allBuildings.size();
-		System.out.println("Removing empty buildings!");
+		System.out.println("Removing buildings with no data!");
 
 		for (Element buildingElement: allBuildings) {
 			if (--counter%1000 ==0 )
@@ -297,7 +303,9 @@ public class XMLCacheFixer extends XMLCache {
 				(lifts==null || lifts.equals("нет данных"))
 			) {
 				buildingElement.detach();
+				emptyDataBuildingsCounter++;
 			}
 		}
+		System.out.println("Removed "+emptyDataBuildingsCounter+" buildings");
 	}
 }

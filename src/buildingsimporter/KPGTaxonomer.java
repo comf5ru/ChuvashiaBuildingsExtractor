@@ -8,26 +8,33 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidParameterException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Интефейсный класс для загрузки и доступа к файлу экспорта таксономии. 
+ *
+ */
 public class KPGTaxonomer {
 
+	// Загружаемый файл с экпортом таксономии
 	private	Path file;
 	
+	// Термин таксономии
 	static
 	public class KPGTerm {
 		public int id;
 		public String name;
-		public int parentId;
+		public int parentId; // ид родителя, если есть (иначе 0). Первичен по отношению к свойству "parent".
 		public KPGTerm parent;
 		
 		KPGTerm(int id, String name, int pid) {this.id = id; this.name = name; this.parentId = pid;}
-
 	}
 	
-	public HashMap<Integer, KPGTerm> terms;
+	public HashMap<Integer, KPGTerm> terms; // набор терминов {id, KPGTerm}
 	
 	public KPGTaxonomer(String filename) {
 		file = Paths.get(filename);
@@ -53,8 +60,22 @@ public class KPGTaxonomer {
 		    System.err.format("IOException: %s%n", x);
 		}
 		
-		for (KPGTerm t: terms.values()) 
-			t.parent = terms.get(t.parentId);
+		Collection <Integer> failedIds = new LinkedList<>();
+		for (KPGTerm t: terms.values()) {
+			int pid = t.parentId;
+			if (pid != 0) {
+				t.parent = terms.get(pid);
+				// родитель не найден!
+				if (t.parent == null) failedIds.add(t.id);
+			}
+		}
+		
+		if (failedIds.size() > 0) {
+			System.out.println(String.format("Found %d bad terms on loading (parent doesn't exist)", failedIds.size()));
+			for (Integer f_id: failedIds)
+				terms.remove(f_id);
+		}
+		System.out.println(String.format("Loaded %d terms", terms.size()));
 	}
 
 	/**
