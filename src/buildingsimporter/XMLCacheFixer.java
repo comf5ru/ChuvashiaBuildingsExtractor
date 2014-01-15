@@ -1,6 +1,8 @@
 package buildingsimporter;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -124,15 +126,17 @@ public class XMLCacheFixer extends XMLCache {
 	 * @return id термина в словаре или 0 при ошибке.
 	 */
 	public int match_building_addr_term(Element building, KPGTaxonomer taxonomer) {
-		String areaName = building.getChildText("areaName");
-		String locationName = building.getChildText("locationName");
-		String location = building.getChildText("location");
-		String street = building.getChildText("street");
+		String areaName = building.getChildText("areaName"); //Название района, полученное из ссылки на страницу района
+		String locationName = building.getChildText("locationName"); //Название нас.пункта, полученное из ссылки на страницу района
+		String location = building.getChildText("location"); //Название нас.пункта, полученное парсингом адреса. !! может не совпадать с locationName
+		String street = building.getChildText("street"); //Название улицы.
 		
 //		String url = building.getChildText("url");
 		
 		int areaId = 0;
 		int locationId = 0;
+		// близжайшие похожие с заданной погрешностью по названию нас. пункты 
+		LinkedList<KPGTerm> closeLocationMatches = new LinkedList<>();
 		int streetId = 0;
 		
 		// верхний уровень - район
@@ -172,49 +176,71 @@ public class XMLCacheFixer extends XMLCache {
 			String fixedLocation = prepareName(location);
 
 			// Отображение id -> weight
-			HashMap<Integer, Integer> matchingWeights = new HashMap<>();
+			class TermIdWeightPair {
+				int id;	int weight;
+				TermIdWeightPair(int i, int w) {id = i; weight = w;};
+			}
+			List<TermIdWeightPair> matchingWeightsList = new LinkedList<>(); 
 			
 			// перебор терминов и поиск максимально подходящего
 			int maxWeight = 0;
 			for (KPGTerm term: subset.values()) {
+				String fixedTermName = prepareName(term.name);
 				// коэффициенты похожести 
-				int linkNameWeight = likeness(fixedLocationName, prepareName(term.name));
-				int parsedNameWeight = likeness(fixedLocation, prepareName(term.name));
-				int parsedCombined = likeness(fixedLocation+fixedLocationName, prepareName(term.name));
+				int linkNameWeight = likeness(fixedLocationName, fixedTermName);
+				int parsedNameWeight = likeness(fixedLocation, fixedTermName);
+				int parsedCombined = likeness(fixedLocation+fixedLocationName, fixedTermName); // иногда терм называется типа "д.Чиршкасы (Сирмапосинского с/п)" - т.е. loc+locName
 				int weight = Math.max(Math.max(linkNameWeight, parsedNameWeight), parsedCombined);
 				
 				if (weight > maxWeight && weight>50) {
 					maxWeight = weight;
 					locationId = term.id;
 				}
-				matchingWeights.put(term.id, weight);
+				matchingWeightsList.add(new TermIdWeightPair(term.id, weight));
 			}
 			
-			// получим близжайших конкурентов с заданной погрешностью
-			LinkedList<KPGTerm> closeMatches = new LinkedList<>();
+			// Построение списка близко совпавших, отсортированного по убыванию близости
 			
-			// ... но только если не произошло идеального совпадения.
-			if (maxWeight<95)
-			for (Entry<Integer, Integer> entry: matchingWeights.entrySet()) {
-				int entryId = entry.getKey();
-				int entryWeight = entry.getValue(); 
-				if ((entryWeight+20 >= maxWeight) && (entryId != locationId))
-					closeMatches.add(subset.get(entry.getKey()));
-			}
+			// Фильтрация по близости.
+			List<TermIdWeightPair> removeList = new LinkedList<>(); 
+			for (TermIdWeightPair entry: matchingWeightsList) 
+				if (entry.weight+5 < maxWeight || entry.id==locationId)
+					removeList.add(entry);
+			
+			matchingWeightsList.removeAll(removeList);
+			
+			// anonymous class. I'm a cool kid now.
+			Collections.sort(matchingWeightsList,
+					new Comparator<TermIdWeightPair>() {
+						@Override
+						public int compare(TermIdWeightPair o1, TermIdWeightPair o2) {
+							return o1.weight-o2.weight;
+						}
+					}
+			);
+			
+			// {id, weight} list -> {term} list
+			for (TermIdWeightPair entry: matchingWeightsList) 
+				closeLocationMatches.add(subset.get(entry.id));
 			
 			if (locationId == 0) {
 				System.err.println("Can't match a location: "+areaName+"|"+locationName);
 				return 0;
-			} else if (closeMatches.size()>0) {
+			} else if (matchingWeightsList.size()>0) {
 				// нашли несколько близких, но ни одного идеального
 				System.out.println("-------------------");
 				System.out.println("Location "+areaName+"|"+locationName+"("+location+")"+" was matched to "+subset.get(locationId).name);
-				for (KPGTerm closeTerm: closeMatches)
-					System.out.println("  .. but there may be chance ("+(matchingWeights.get(closeTerm.id)-maxWeight)+") it is "
-							+closeTerm.name);
+				for (TermIdWeightPair closeTerm: matchingWeightsList)
+					System.out.println("  .. but there may be chance ("+(closeTerm.weight-maxWeight)+") it is "
+							+subset.get(closeTerm.id).name);
 			}
 		} // получение locationID по известному areaID
 		
+		if (locationId == 0) {
+			System.err.println("Can't match location for "+areaName+": "+locationName+" ("+location+")");
+			return 0;
+		}
+
 		//TODO сопоставить улицы
 		
 		return 0;
@@ -265,14 +291,18 @@ public class XMLCacheFixer extends XMLCache {
 			
 			assert (end1-start1 == end2-start2);
 
-			int count_equals = 0;
+			int count_equals = 0; //Число совпавших символов
 			for (int i = 0; i< end1-start1; i++)
 				if (str1.charAt(start1+i) == str2.charAt(start2+i))
 					count_equals++;
 			
 			max_likeness = Math.max(max_likeness, count_equals); 
 		}
-		return max_likeness*100/(Math.max(l1, l2));
+		
+		int likeness_coeff = max_likeness*100/(Math.max(l1, l2));
+		if (max_likeness>5)
+			likeness_coeff += max_likeness/3; // бонусные баллы за длинное совпадение. 
+		return likeness_coeff;
 	}
 	
 	/**
