@@ -81,7 +81,7 @@ public class KPGTaxonomer {
 	/**
 	 * Получить подмножество терминов, имееющих данного родителя
 	 * @param pid - id родителя для выборки
-	 * @return 
+	 * @return HashMap, возможно пустой.
 	 */
 	public HashMap<Integer, KPGTerm> chooseForParent(int pid) {
 		HashMap<Integer, KPGTerm> subset = new HashMap<>();

@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jdom2.Element;
 
@@ -189,13 +191,12 @@ public class XMLCacheFixer extends XMLCache {
 				// коэффициенты похожести 
 				int linkNameWeight = likeness(fixedLocationName, fixedTermName);
 				int parsedNameWeight = likeness(fixedLocation, fixedTermName);
-				int parsedCombined = likeness(fixedLocation+fixedLocationName, fixedTermName); // иногда терм называется типа "д.Чиршкасы (Сирмапосинского с/п)" - т.е. loc+locName
+				int parsedCombined = likeness(fixedLocation+fixedLocationName, fixedTermName)+5; // иногда терм называется типа "д.Чиршкасы (Сирмапосинского с/п)" - т.е. loc+locName
 				int weight = Math.max(Math.max(linkNameWeight, parsedNameWeight), parsedCombined);
 				
-				if (weight > maxWeight && weight>50) {
+				if (weight > maxWeight && weight>50) 
 					maxWeight = weight;
-					locationId = term.id;
-				}
+				
 				matchingWeightsList.add(new TermIdWeightPair(term.id, weight));
 			}
 			
@@ -204,17 +205,17 @@ public class XMLCacheFixer extends XMLCache {
 			// Фильтрация по близости.
 			List<TermIdWeightPair> removeList = new LinkedList<>(); 
 			for (TermIdWeightPair entry: matchingWeightsList) 
-				if (entry.weight+5 < maxWeight || entry.id==locationId)
+				if (entry.weight+5 < maxWeight) // || entry.id==locationId)
 					removeList.add(entry);
 			
 			matchingWeightsList.removeAll(removeList);
 			
-			// anonymous class. I'm a cool kid now.
+			// Anonymous class. Yeah, baby, like a pro.
 			Collections.sort(matchingWeightsList,
 					new Comparator<TermIdWeightPair>() {
 						@Override
 						public int compare(TermIdWeightPair o1, TermIdWeightPair o2) {
-							return o1.weight-o2.weight;
+							return o2.weight-o1.weight; // по убыванию
 						}
 					}
 			);
@@ -223,29 +224,116 @@ public class XMLCacheFixer extends XMLCache {
 			for (TermIdWeightPair entry: matchingWeightsList) 
 				closeLocationMatches.add(subset.get(entry.id));
 			
-			if (locationId == 0) {
-				System.err.println("Can't match a location: "+areaName+"|"+locationName);
+			if (matchingWeightsList.size() == 0) {
+				System.err.println("Can't match location for "+areaName+": "+locationName+" ("+location+")");
 				return 0;
-			} else if (matchingWeightsList.size()>0) {
+			} else if (matchingWeightsList.size()>1) {
 				// нашли несколько близких, но ни одного идеального
 				System.out.println("-------------------");
-				System.out.println("Location "+areaName+"|"+locationName+"("+location+")"+" was matched to "+subset.get(locationId).name);
-				for (TermIdWeightPair closeTerm: matchingWeightsList)
-					System.out.println("  .. but there may be chance ("+(closeTerm.weight-maxWeight)+") it is "
-							+subset.get(closeTerm.id).name);
+				KPGTerm first = closeLocationMatches.getFirst();
+				System.out.println("Location "+areaName+"|"+locationName+"("+location+")"+" was matched to "+first.name);
+				for (TermIdWeightPair closeIdWPair: matchingWeightsList) {
+					if (closeIdWPair.id == first.id) continue;
+					System.out.println("  .. but there may be chance ("+(closeIdWPair.weight-maxWeight)+") it is "
+							+subset.get(closeIdWPair.id).name);
+				}
 			}
-		} // получение locationID по известному areaID
+			
+			locationId = closeLocationMatches.getFirst().id;
+		} // получение locationId и closeLocationMatches по известному areaId 
+		else {
+			// добавить locationId в список closeLocationMatches
+			closeLocationMatches.add(taxonomer.terms.get(locationId));
+		} 
 		
-		if (locationId == 0) {
-			System.err.println("Can't match location for "+areaName+": "+locationName+" ("+location+")");
-			return 0;
+		if (street==null || street.isEmpty()) {
+//			System.out.println("Building with no street : "+areaName+"|"+locationName+"("+location+")");
+			return locationId;
 		}
 
-		//TODO сопоставить улицы
+		if (street.equals("п Октябрьский ул Лесхозная")) {
+			street = street+"";
+		}
+		//1. Проверка особой ситуации, когда улица указана как "п Октябрьский ул Лесхозная" (в Чебоксарах)
+		int checkRes = checkSpecialStreet(street, taxonomer);
+		if (checkRes != -1) 
+			return checkRes; // возврат результата сопоставления, если это действительно особая ситуация.
+
+		//2. Постараемся найти подходящую улицу для дома в дочерних тегах от locationId, если не получится, то в ближайших подходящих
 		
+		// проверяем каждый нас. пункт из совпавших ранее.
+		for (KPGTerm loc: closeLocationMatches) {
+			subset = taxonomer.chooseForParent(loc.id); // список улиц
+			
+			// проверяем улицы в нас. пункте.
+			int maxWeight = 0;
+			for (KPGTerm streetTerm: subset.values()) {
+				int weight = likeness(street, streetTerm.name);
+				if (weight>50) {
+					weight = weight + 0;
+				}
+				if (weight > maxWeight && weight>50) {
+					maxWeight = weight;
+					streetId = streetTerm.id;
+				}				
+			}
+			
+			if (streetId != 0) 
+				return streetId;
+		}
+		
+		System.out.println("Can't match a street: "+areaName+"|"+locationName+"("+location+") "+street);
 		return 0;
 	}
 	
+	/**
+	 * Простое сравнение строки с именами терминов
+	 * @param needle - строка для поиска
+	 * @param haystack - набор терминов
+	 * @return 0 если удовлетворительного термина не найдено, иначе id наиболее подходящего термина.
+	 */
+	private int simlpeTermMatch(String needle, HashMap<Integer,KPGTaxonomer.KPGTerm> haystack) {
+		int maxWeight = 0; int resultId = 0;
+		needle = prepareName(needle);
+		for (KPGTerm term: haystack.values()) {
+			int weight = likeness(needle, term.name);
+			
+			if (weight>maxWeight && weight>50) {
+				maxWeight = weight;
+				resultId = term.id;
+			}				
+		}
+		
+		return resultId;
+	}
+	
+	/**
+	 * Проверяет особую ситуацию, когда для города Чебоксары улица задана в виде "п Октябрьский ул Лесхозная"
+	 * @param street - строка улицы
+	 * @param taxonomer - хранилище терминов
+	 * @return -1, если строка не является особой ситуацией
+	 *   		0, если строка является особой ситуацией, но совпадений не найдено
+	 *   	   id термина улицы, если удалось сопоставить особую ситуацию.
+	 */
+	private int checkSpecialStreet(String street, KPGTaxonomer taxonomer) {
+        Pattern specialLocStreet = Pattern.compile("п ([^ ]+) (.*)$");
+        Matcher m = specialLocStreet.matcher(street);
+        if (m.matches()) {
+    		String subLocName = "п " + m.group(1);
+    		String subLocStreet = m.group(2);
+    		
+    		HashMap<Integer,KPGTaxonomer.KPGTerm> subset = taxonomer.chooseForParent(17004); //посёлки
+    		int subLocId = simlpeTermMatch(subLocName, subset);
+    		if (subLocId == 0)
+    			return 0;
+    		
+    		subset = taxonomer.chooseForParent(subLocId); // теперь улицы
+    		int subLocStreetId = simlpeTermMatch(subLocStreet, subset);
+			return subLocStreetId;
+        }
+        
+		return -1;
+	}
 	/**
 	 * Подготавливает строку для сравнения с другой строкой, удаляя неважные символы.
 	 * @param name
@@ -300,8 +388,8 @@ public class XMLCacheFixer extends XMLCache {
 		}
 		
 		int likeness_coeff = max_likeness*100/(Math.max(l1, l2));
-		if (max_likeness>5)
-			likeness_coeff += max_likeness/3; // бонусные баллы за длинное совпадение. 
+//		if (max_likeness>6)
+//			likeness_coeff += (max_likeness-6)/2; // бонусные баллы за длинное совпадение. 
 		return likeness_coeff;
 	}
 	
@@ -325,12 +413,12 @@ public class XMLCacheFixer extends XMLCache {
 			String walls = buildingElement.getChildText("walls");
 			String lifts = buildingElement.getChildText("lifts");
 			
-			if ((expl_year==null || expl_year.equals("нет данных")) &&
-				(flats==null || flats.equals("нет данных")) &&
-				(porches==null || porches.equals("нет данных")) &&
-				(floors==null || floors.equals("нет данных")) &&
-				(walls==null || walls.equals("нет данных")) &&
-				(lifts==null || lifts.equals("нет данных"))
+			if ((expl_year==null || expl_year.isEmpty() || expl_year.equals("нет данных")) &&
+				(flats==null || flats.isEmpty() || flats.equals("нет данных")) &&
+				(porches==null || porches.isEmpty() || porches.equals("нет данных")) &&
+				(floors==null || floors.isEmpty() || floors.equals("нет данных")) &&
+				(walls==null || walls.isEmpty() || walls.equals("нет данных")) &&
+				(lifts==null || lifts.isEmpty() || lifts.equals("нет данных"))
 			) {
 				buildingElement.detach();
 				emptyDataBuildingsCounter++;
