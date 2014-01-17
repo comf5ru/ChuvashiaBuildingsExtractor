@@ -15,15 +15,12 @@ public class Main {
 		KPGTaxonomer taxonomer = new KPGTaxonomer("kpg_locations_data_ids.txt");
 		cache = new XMLCacheFixer("4import_Buildings_Chuvashia.xml");
 		
-		cache.dropEmpty();
+//		cache.dropEmpty();
+//		cache.kill_duplicates();
+		
+//		cache.saveCache();
 		cache.match_all_buildings(taxonomer);
 
-//		cache.dropEmpty();
-//		cache.saveCache();
-		
-//		cache.kill_duplicates();
-//		cache.saveCache();
-		
 //		Collection<String> areas = cache.getAllAreas();
 //		for(String a : areas) {
 //			System.out.println(a);
