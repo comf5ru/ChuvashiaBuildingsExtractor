@@ -358,65 +358,29 @@ public class XMLCacheFixer extends XMLCache {
 	}
 	
 	/**
-	 * Получить термины таксономии и ID нод домов для адресов всех зданий. НЕ ОКОНЧЕНА. //TODO
+	 * Получить термины таксономии и ID нод домов для адресов всех зданий.
+	 * Изменяет здания в кэше, добавляя поле "streetTermId" с номером термина из таксономии.
 	 * @param taxonomer
 	 */
-	public void match_all_buildings(KPGTaxonomer taxonomer) {
+	public void match_buildings_streets(KPGTaxonomer taxonomer) {
 		Collection<Element> allBuildings = queryXPathList(ALL_BUILDINGS);
 		int counter = allBuildings.size();
 		System.out.println("Matching buildings!");
 		
-		HashMap<String, Integer> streetMatches = new HashMap<>();
-
 		for (Element buildingElement: allBuildings) {
 			if (--counter%1000 ==0 )
 				System.out.println(counter);
 			int termId = match_building_addr_term(buildingElement, taxonomer);
-			String areaName = buildingElement.getChildText("areaName"); //Название района, полученное из ссылки на страницу района
-			String locationName = buildingElement.getChildText("locationName"); //Название нас.пункта, полученное из ссылки на страницу района
-			String location = buildingElement.getChildText("location"); //Название нас.пункта, полученное парсингом адреса. !! может не совпадать с locationName
-			String street = buildingElement.getChildText("street"); //Название улицы.
-			
-			if (areaName==null) areaName = "";
-			if (locationName==null) locationName = "";
-			if (location==null) location = "";
-			if (street==null) street = "";
-			
-			String fullAddr = locationName+"| "+location+"| "+street;
-			if (!areaName.isEmpty())
-				fullAddr = areaName+"| "+fullAddr;
 
-			
-			Integer alreadyMatchedId = streetMatches.get(fullAddr);
-			if (alreadyMatchedId != null && alreadyMatchedId != termId) 
-				System.err.println("Matching conflict! String ["+fullAddr+"] matched 2+ ids");
-			
-			if (termId != 0)
-				streetMatches.put(fullAddr, termId);
-		}
-		
-		// Вывод всех совпадений.
-		try (OutputStream outStream = Files.newOutputStream(Paths.get("matchingresult.txt"), 
-				StandardOpenOption.CREATE, 
-				StandardOpenOption.TRUNCATE_EXISTING)) { 
-			for (Map.Entry<String, Integer> entry:streetMatches.entrySet()) {
-				String termsString = ""; int termId = entry.getValue();
-				while (termId != 0) {
-					KPGTerm term = taxonomer.terms.get(termId);
-					termsString = term.name+"| "+termsString;
-					termId = term.parentId; // CAUTION! NO LOOPS!
+			if (termId != 0) {
+				Element stID = buildingElement.getChild("streetTermId");
+				if (stID == null) { 
+					stID = new Element("streetTermId"); // новый подчинённый элемент для сохранения ID термина адреса.
+					buildingElement.addContent(stID);
 				}
-				
-				outStream.write(entry.getKey().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-				outStream.write(13);outStream.write(10);
-				outStream.write(termsString.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-				outStream.write(13);outStream.write(10);
-				outStream.write(13);outStream.write(10);
+				stID.setText(String.valueOf(termId));
 			}
-		} catch (IOException e) {
-			System.err.println("Error while writing to matchingresult.txt");
-			e.printStackTrace();
-		}		
+		}
 	}
 	
 	/**
@@ -484,4 +448,71 @@ public class XMLCacheFixer extends XMLCache {
 		}
 		System.out.println("Removed "+emptyDataBuildingsCounter+" buildings");
 	}
+	
+	private String prepareBnum(String source) {
+		return source.toLowerCase().replace("a", "а");
+	}
+	//TODO
+	public void match_buildings_number(Map<Integer, Collection<Integer>> houseID_addrID, Map<Integer, String> houseID_bnum) {
+		Collection<Element> allBuildings = queryXPathList(ALL_BUILDINGS);
+		int counter = allBuildings.size();
+		System.out.println("Matching buildings' numbers.");
+		
+		int failedCounter = 0;
+		//1 Для каждого дома...
+		for (Element buildingElement: allBuildings) {
+			if (--counter%1000 ==0 )
+				System.out.println(counter);
+			
+			int nodeId = 0;
+			
+			// получим ID адреса.
+			int addrID = 0;
+			try {
+				addrID = Integer.parseInt(buildingElement.getChildText("streetTermId"));
+			} catch (NumberFormatException e) {
+				// не  удалось прочитать id термина адреса - возможно он не был сопоставлен.
+				continue;
+			}
+			
+			// определим все дома на его улице,
+			Collection<Integer> houseIDs = houseID_addrID.get(addrID);
+			if (houseIDs == null || houseIDs.size()==0)
+				continue; //у этого термина нет домов, как странно!
+			
+			// и для каждого дома попробуем сопоставить его номер.
+			String sourceNum = prepareBnum(buildingElement.getChildText("building_number"));
+			for (int houseID: houseIDs) {
+				String targetNum = prepareBnum(houseID_bnum.get(houseID));
+				
+				if (targetNum.equals(sourceNum)) {
+					nodeId = houseID;
+					break;
+				} else {
+					// TODO нужны дополнительные сравнения "литера" и проч.
+				}
+			}
+			
+			if (nodeId != 0) {
+				Element stID = buildingElement.getChild("streetTermId");
+				if (stID == null) { 
+					stID = new Element("streetTermId"); // новый подчинённый элемент для сохранения ID термина адреса.
+					buildingElement.addContent(stID);
+				}
+				stID.setText(String.valueOf(nodeId));
+			} else {
+				failedCounter++;
+//				System.out.println("Can't match bnum: termID = "+addrID+"; bnum = "+sourceNum);
+//				System.out.print("   { ");
+//				for (int houseID: houseIDs) {
+//					String targetNum = houseID_bnum.get(houseID).toLowerCase();
+//					System.out.print(targetNum + ", ");
+//				}
+//				System.out.println("}");
+			} //if (nodeId != 0)
+		} //for (Element buildingElement: allBuildings)
+		
+		System.out.println(""+failedCounter+" out of "+allBuildings.size()+" were not matched");
+	}
+	
 }
