@@ -1,5 +1,10 @@
 package buildingsimporter;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -7,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,7 +128,7 @@ public class XMLCacheFixer extends XMLCache {
 	}
 	
 	/**
-	 * Получить id термина из словаря "Города и улицы" для одного здания. НЕ ОКОНЧЕНО //TODO
+	 * Получить id термина из словаря "Города и улицы" для одного здания.
 	 * @param building - Здание
 	 * @param taxonomer - словарь терминов
 	 * @return id термина в словаре или 0 при ошибке.
@@ -133,7 +139,17 @@ public class XMLCacheFixer extends XMLCache {
 		String location = building.getChildText("location"); //Название нас.пункта, полученное парсингом адреса. !! может не совпадать с locationName
 		String street = building.getChildText("street"); //Название улицы.
 		
-//		String url = building.getChildText("url");
+		if (street != null && !street.isEmpty()) {
+			// поправить имена улиц и нас. пунктов, когда улица задана видом "(Лапсарского с/п) ул Восточная"
+	        Pattern specialLocStreet = Pattern.compile("(\\([^)]+\\)) (.*)$");
+	        Matcher m = specialLocStreet.matcher(street);
+	        if (m.matches()) {
+	    		String subLocName = m.group(1);
+	    		String subLocStreet = m.group(2);
+	    		street = subLocStreet;
+	    		location += " "+subLocName; 
+	        }
+		}
 		
 		int areaId = 0;
 		int locationId = 0;
@@ -205,7 +221,7 @@ public class XMLCacheFixer extends XMLCache {
 			// Фильтрация по близости.
 			List<TermIdWeightPair> removeList = new LinkedList<>(); 
 			for (TermIdWeightPair entry: matchingWeightsList) 
-				if (entry.weight+5 < maxWeight) // || entry.id==locationId)
+				if (entry.weight+5 < maxWeight) 
 					removeList.add(entry);
 			
 			matchingWeightsList.removeAll(removeList);
@@ -246,10 +262,8 @@ public class XMLCacheFixer extends XMLCache {
 			closeLocationMatches.add(taxonomer.terms.get(locationId));
 		} 
 		
-		if (street==null || street.isEmpty()) {
-//			System.out.println("Building with no street : "+areaName+"|"+locationName+"("+location+")");
+		if (street==null || street.isEmpty()) 
 			return locationId;
-		}
 
 		if (street.equals("п Октябрьский ул Лесхозная")) {
 			street = street+"";
@@ -344,19 +358,65 @@ public class XMLCacheFixer extends XMLCache {
 	}
 	
 	/**
-	 * Получить термины таксономии для адресов всех зданий. НЕ ОКОНЧЕНА. //TODO
+	 * Получить термины таксономии и ID нод домов для адресов всех зданий. НЕ ОКОНЧЕНА. //TODO
 	 * @param taxonomer
 	 */
 	public void match_all_buildings(KPGTaxonomer taxonomer) {
 		Collection<Element> allBuildings = queryXPathList(ALL_BUILDINGS);
 		int counter = allBuildings.size();
 		System.out.println("Matching buildings!");
+		
+		HashMap<String, Integer> streetMatches = new HashMap<>();
 
 		for (Element buildingElement: allBuildings) {
 			if (--counter%1000 ==0 )
 				System.out.println(counter);
 			int termId = match_building_addr_term(buildingElement, taxonomer);
+			String areaName = buildingElement.getChildText("areaName"); //Название района, полученное из ссылки на страницу района
+			String locationName = buildingElement.getChildText("locationName"); //Название нас.пункта, полученное из ссылки на страницу района
+			String location = buildingElement.getChildText("location"); //Название нас.пункта, полученное парсингом адреса. !! может не совпадать с locationName
+			String street = buildingElement.getChildText("street"); //Название улицы.
+			
+			if (areaName==null) areaName = "";
+			if (locationName==null) locationName = "";
+			if (location==null) location = "";
+			if (street==null) street = "";
+			
+			String fullAddr = locationName+"| "+location+"| "+street;
+			if (!areaName.isEmpty())
+				fullAddr = areaName+"| "+fullAddr;
+
+			
+			Integer alreadyMatchedId = streetMatches.get(fullAddr);
+			if (alreadyMatchedId != null && alreadyMatchedId != termId) 
+				System.err.println("Matching conflict! String ["+fullAddr+"] matched 2+ ids");
+			
+			if (termId != 0)
+				streetMatches.put(fullAddr, termId);
 		}
+		
+		// Вывод всех совпадений.
+		try (OutputStream outStream = Files.newOutputStream(Paths.get("matchingresult.txt"), 
+				StandardOpenOption.CREATE, 
+				StandardOpenOption.TRUNCATE_EXISTING)) { 
+			for (Map.Entry<String, Integer> entry:streetMatches.entrySet()) {
+				String termsString = ""; int termId = entry.getValue();
+				while (termId != 0) {
+					KPGTerm term = taxonomer.terms.get(termId);
+					termsString = term.name+"| "+termsString;
+					termId = term.parentId; // CAUTION! NO LOOPS!
+				}
+				
+				outStream.write(entry.getKey().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+				outStream.write(13);outStream.write(10);
+				outStream.write(termsString.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+				outStream.write(13);outStream.write(10);
+				outStream.write(13);outStream.write(10);
+			}
+		} catch (IOException e) {
+			System.err.println("Error while writing to matchingresult.txt");
+			e.printStackTrace();
+		}		
 	}
 	
 	/**
@@ -388,8 +448,6 @@ public class XMLCacheFixer extends XMLCache {
 		}
 		
 		int likeness_coeff = max_likeness*100/(Math.max(l1, l2));
-//		if (max_likeness>6)
-//			likeness_coeff += (max_likeness-6)/2; // бонусные баллы за длинное совпадение. 
 		return likeness_coeff;
 	}
 	
@@ -406,14 +464,14 @@ public class XMLCacheFixer extends XMLCache {
 			if (--counter%1000 ==0 )
 				System.out.println(counter);
 			
-			String expl_year = buildingElement.getChildText("expl_year");
+//			String expl_year = buildingElement.getChildText("expl_year");
 			String flats = buildingElement.getChildText("flats");
 			String porches = buildingElement.getChildText("porches");
 			String floors = buildingElement.getChildText("floors");
 			String walls = buildingElement.getChildText("walls");
 			String lifts = buildingElement.getChildText("lifts");
 			
-			if ((expl_year==null || expl_year.isEmpty() || expl_year.equals("нет данных")) &&
+			if (//(expl_year==null || expl_year.isEmpty() || expl_year.equals("нет данных")) &&
 				(flats==null || flats.isEmpty() || flats.equals("нет данных")) &&
 				(porches==null || porches.isEmpty() || porches.equals("нет данных")) &&
 				(floors==null || floors.isEmpty() || floors.equals("нет данных")) &&

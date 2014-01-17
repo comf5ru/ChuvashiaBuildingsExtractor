@@ -15,6 +15,7 @@ public class Main {
 		KPGTaxonomer taxonomer = new KPGTaxonomer("kpg_locations_data_ids.txt");
 		cache = new XMLCacheFixer("4import_Buildings_Chuvashia.xml");
 		
+		cache.dropEmpty();
 		cache.match_all_buildings(taxonomer);
 
 //		cache.dropEmpty();
