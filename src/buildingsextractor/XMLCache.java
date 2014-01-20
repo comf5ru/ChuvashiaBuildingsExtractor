@@ -114,7 +114,7 @@ public class XMLCache {
 	 * @param doc - JDOM Document or Element
 	 * @return List of found matches, may be of zero size if nothing is found
 	 */
-	protected final
+	public final
 	List<Element> queryXPathList(String query) {
 		if (query == null) return new ArrayList<Element>(0);
 		try {

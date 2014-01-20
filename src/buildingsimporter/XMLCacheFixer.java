@@ -448,15 +448,136 @@ public class XMLCacheFixer extends XMLCache {
 		}
 		System.out.println("Removed "+emptyDataBuildingsCounter+" buildings");
 	}
+
+	/**
+	 * Поправляет строку номера дома, полученного из базы, чтобы можно было совместить номер дома базы с номером дома из парсера 
+	 * @param source - строка полученная из базы
+	 * @return строка для сравнения.
+	 */
+	public static
+	String prepareDatabaseBnum(String source) {
+		String s = source.toLowerCase().replace("двлд", "").replace("влд", "");
+		Pattern p; Matcher m;
+
+		p = Pattern.compile("(.*)(\\.|стр_|сооружение_)");
+		m = p.matcher(s);
+		if (m.matches()) 
+			s = m.group(1);
+		
+		p = Pattern.compile("(сооружение|стр)([^а-я].*)");
+		m = p.matcher(s);
+		if (m.matches()) 
+			s = m.group(2);
+		
+		p = Pattern.compile("(\\d+)(стр|литер|сооружение)([а-я])");
+		m = p.matcher(s);
+		if (m.matches()) 
+			s = m.group(1)+m.group(3); 
+		
+		p = Pattern.compile("(\\d+)_([а-я])");
+		m = p.matcher(s);
+		if (m.matches()) 
+			s = m.group(1)+m.group(2); 
+
+		p = Pattern.compile("(.*\\d)к([а-я])$");
+		m = p.matcher(s);
+		if (m.matches()) 
+			s = m.group(1)+m.group(2);
+		return s;
+	}	
 	
-	private String prepareBnum(String source) {
-		return source.toLowerCase().replace("a", "а");
+	/**
+	 * Поправляет строку номера дома полученного из парсера, чтобы можно было совместить номер дома базы с номером дома из парсера 
+	 * @param source - строка полученная из парсера
+	 * @return строка для сравнения.
+	 */
+	public static
+	List<String> prepareParsedBnum(String source) {
+		String s = source.toLowerCase().replace("a", "а").replace(" строение", "").replace(" жилое", "").replace("подъезд", "п.")
+				.replace(" жилой", "").replace(" дом", "");
+		
+		Pattern p; Matcher m;
+		List<String> rvalue = new LinkedList<>(); // Список возвращаемых вариантов (чаще 1)
+
+		
+		p = Pattern.compile("([^\"]*)\"([^\"]*)\"(.*)?"); // литера в кавычках.
+		m = p.matcher(s);
+		if (m.matches()) { 
+			//  4"a"  --> 4a
+			if (m.group(3) != null)
+				s = m.group(1)+m.group(2)+m.group(3);
+			else
+				s = m.group(1)+m.group(2);
+		}
+		
+		p = Pattern.compile("(\\d+)\\s+([а-я])"); // литера отделена пробелом
+		m = p.matcher(s);
+		if (m.matches()) { 
+			//  4 a  --> 4a
+			s = m.group(1)+m.group(2);
+		}
+		
+		p = Pattern.compile("(\\d+ кор.[а-я])\\d+"); // повторение(другой) номер после корпуса
+		m = p.matcher(s);
+		if (m.matches()) { 
+			//  30 кор.а30 -> 30 кор.а 
+			s = m.group(1);
+		}
+		
+		p = Pattern.compile("(\\d+) кор.([а-я])");
+		m = p.matcher(s);
+		if (m.matches()) { 
+			//  30 кор.а -> 30а 
+			s = m.group(1)+m.group(2);
+		}
+		
+		p = Pattern.compile("(\\d+) кор.(\\d+)"); 
+		m = p.matcher(s);
+		if (m.matches()) { 
+			//  30 кор.1 -> 30к1 
+			rvalue.add(m.group(1)+"к"+m.group(2));
+			rvalue.add(m.group(1)+"/"+m.group(2));
+			return rvalue;
+		}			
+
+		rvalue.add(s);
+		
+		p = Pattern.compile("([^/]*)/([^ ]*)( .*)?"); // нумерация по перпендикулярной улице.
+		m = p.matcher(s);
+		if (m.matches()) { 
+			// "a/b c" --> "aкb c", "a c"
+			if (m.group(3) != null) {
+				rvalue.add(m.group(1)+"к"+m.group(2)+m.group(3));
+				rvalue.add(m.group(1)+m.group(3));
+			} else {
+				rvalue.add(m.group(1)+"к"+m.group(2));
+				rvalue.add(m.group(1));
+			}
+		}
+		
+		return rvalue;
 	}
+	
 	//TODO
 	public void match_buildings_number(Map<Integer, Collection<Integer>> houseID_addrID, Map<Integer, String> houseID_bnum) {
 		Collection<Element> allBuildings = queryXPathList(ALL_BUILDINGS);
 		int counter = allBuildings.size();
 		System.out.println("Matching buildings' numbers.");
+		
+		// Дополнительные прочтения bNum из базы
+		Map<Integer, String> houseID_bnum1 = new HashMap<>();
+		Map<Integer, String> houseID_bnum2 = new HashMap<>();
+		
+		// составим карты дополнительных прочтений номера, где возможно: "30/12" -> "30к12" и "30"
+		for (Entry<Integer, String> entry: houseID_bnum.entrySet()) {
+			Pattern extraBNumPattern = Pattern.compile("(\\d+)/(\\d+)");
+			Matcher m = extraBNumPattern.matcher(entry.getValue());
+			
+			if (m.matches()) {
+				houseID_bnum1.put(entry.getKey(), m.group(1)+"к"+m.group(2));
+				houseID_bnum2.put(entry.getKey(), m.group(1));
+			}
+		}
 		
 		int failedCounter = 0;
 		//1 Для каждого дома...
@@ -466,7 +587,7 @@ public class XMLCacheFixer extends XMLCache {
 			
 			int nodeId = 0;
 			
-			// получим ID адреса.
+			// получим ID адреса дома.
 			int addrID = 0;
 			try {
 				addrID = Integer.parseInt(buildingElement.getChildText("streetTermId"));
@@ -475,33 +596,91 @@ public class XMLCacheFixer extends XMLCache {
 				continue;
 			}
 			
-			// определим все дома на его улице,
+			// определим все дома на его улице в базе,
 			Collection<Integer> houseIDs = houseID_addrID.get(addrID);
 			if (houseIDs == null || houseIDs.size()==0)
 				continue; //у этого термина нет домов, как странно!
 			
 			// и для каждого дома попробуем сопоставить его номер.
-			String sourceNum = prepareBnum(buildingElement.getChildText("building_number"));
-			for (int houseID: houseIDs) {
-				String targetNum = prepareBnum(houseID_bnum.get(houseID));
+			List<String> sourceNums = prepareParsedBnum(buildingElement.getChildText("building_number"));
+			LinkedList<Integer> matchedIDs = new LinkedList<>();
+			
+			if (sourceNums.size() == 0) {
+				failedCounter++;
+				System.err.println("can't generated building num variants for "+buildingElement.getChildText("areaText")+" | "+
+						buildingElement.getChildText("locationName")+" ("+buildingElement.getChildText("location")+
+						") | "+buildingElement.getChildText("street")
+						+", "+buildingElement.getChildText("building_number"));
+				continue; // следующее здание.
+			}
+			
+			// берём все возможные прочтения номера этого дома из парсера. (N1/N2 --> N1/N2, N1кN2, N1)
+			for (String sourceNum : sourceNums) {
+				// и каждое прочтение сверяем с базой
+				for (int houseID: houseIDs) {
+					String targetNum = prepareDatabaseBnum(houseID_bnum.get(houseID));
+					
+					if (targetNum.equals(sourceNum)) {
+						matchedIDs.add(houseID);
+					} 
+				}
 				
-				if (targetNum.equals(sourceNum)) {
-					nodeId = houseID;
-					break;
-				} else {
-					// TODO нужны дополнительные сравнения "литера" и проч.
+				if (matchedIDs.size() >0 ) 
+					break; // достаточно, чтобы совпало хотя бы одно прочтение.
+			}
+			
+			String sourceNumFirst = sourceNums.get(0);
+			
+			if (matchedIDs.size() == 0 ) {
+				//ай-ай, не нашли. попробует тогда альтенативное прочтения 1 по базе. 
+				// Теперь берём только основное прочтение дома из парсера.
+				
+				for (int houseID: houseIDs) {
+					if (houseID_bnum1.containsKey(houseID)) {
+						String targetNum = prepareDatabaseBnum(houseID_bnum1.get(houseID));
+						
+						if (targetNum.equals(sourceNumFirst)) 
+							matchedIDs.add(houseID);
+					}
 				}
 			}
 			
-			if (nodeId != 0) {
+			if (matchedIDs.size() == 0 ) {
+				//ай-ай, снова не нашли. попробует тогда альтенативное прочтения 2 по базе. 
+				// Теперь берём только основное прочтение дома из парсера.
+				
+				for (int houseID: houseIDs) {
+					if (houseID_bnum2.containsKey(houseID)) {
+						String targetNum = prepareDatabaseBnum(houseID_bnum2.get(houseID));
+						
+						if (targetNum.equals(sourceNumFirst)) 
+							matchedIDs.add(houseID);
+					}
+				}				
+			}
+			
+			if (matchedIDs.size() == 1) {
+				nodeId = matchedIDs.getFirst();
 				Element stID = buildingElement.getChild("streetTermId");
 				if (stID == null) { 
 					stID = new Element("streetTermId"); // новый подчинённый элемент для сохранения ID термина адреса.
 					buildingElement.addContent(stID);
 				}
 				stID.setText(String.valueOf(nodeId));
-			} else {
+			} else if (matchedIDs.size()==2 && houseID_bnum.get(matchedIDs.getFirst()).equals(
+					houseID_bnum.get(matchedIDs.getLast())))
+				;
+			else {
 				failedCounter++;
+				System.out.print(""+buildingElement.getChildText("areaText")+" | "+
+						buildingElement.getChildText("locationName")+" ("+buildingElement.getChildText("location")+
+						") | "+buildingElement.getChildText("street")
+						+", "+buildingElement.getChildText("building_number") + 
+						"("+sourceNums.get(0)+") <"+matchedIDs.size()+">");
+				for (Integer hID: matchedIDs) {
+					System.out.print(" {"+houseID_bnum.get(hID)+"}");
+				}
+				System.out.println();
 //				System.out.println("Can't match bnum: termID = "+addrID+"; bnum = "+sourceNum);
 //				System.out.print("   { ");
 //				for (int houseID: houseIDs) {
