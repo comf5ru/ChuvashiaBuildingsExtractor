@@ -579,7 +579,7 @@ public class XMLCacheFixer extends XMLCache {
 			}
 		}
 		
-		int failedCounter = 0;
+		int successCounter = 0;
 		//1 Для каждого дома...
 		for (Element buildingElement: allBuildings) {
 			if (--counter%1000 ==0 )
@@ -606,7 +606,6 @@ public class XMLCacheFixer extends XMLCache {
 			LinkedList<Integer> matchedIDs = new LinkedList<>();
 			
 			if (sourceNums.size() == 0) {
-				failedCounter++;
 				System.err.println("can't generated building num variants for "+buildingElement.getChildText("areaText")+" | "+
 						buildingElement.getChildText("locationName")+" ("+buildingElement.getChildText("location")+
 						") | "+buildingElement.getChildText("street")
@@ -661,17 +660,17 @@ public class XMLCacheFixer extends XMLCache {
 			
 			if (matchedIDs.size() == 1) {
 				nodeId = matchedIDs.getFirst();
-				Element stID = buildingElement.getChild("streetTermId");
+				Element stID = buildingElement.getChild("houseId");
 				if (stID == null) { 
-					stID = new Element("streetTermId"); // новый подчинённый элемент для сохранения ID термина адреса.
+					stID = new Element("houseId"); // новый подчинённый элемент для сохранения ID термина адреса.
 					buildingElement.addContent(stID);
 				}
 				stID.setText(String.valueOf(nodeId));
+				successCounter++;
 			} else if (matchedIDs.size()==2 && houseID_bnum.get(matchedIDs.getFirst()).equals(
 					houseID_bnum.get(matchedIDs.getLast())))
 				;
 			else {
-				failedCounter++;
 				System.out.print(""+buildingElement.getChildText("areaText")+" | "+
 						buildingElement.getChildText("locationName")+" ("+buildingElement.getChildText("location")+
 						") | "+buildingElement.getChildText("street")
@@ -681,17 +680,11 @@ public class XMLCacheFixer extends XMLCache {
 					System.out.print(" {"+houseID_bnum.get(hID)+"}");
 				}
 				System.out.println();
-//				System.out.println("Can't match bnum: termID = "+addrID+"; bnum = "+sourceNum);
-//				System.out.print("   { ");
-//				for (int houseID: houseIDs) {
-//					String targetNum = houseID_bnum.get(houseID).toLowerCase();
-//					System.out.print(targetNum + ", ");
-//				}
-//				System.out.println("}");
+
 			} //if (nodeId != 0)
 		} //for (Element buildingElement: allBuildings)
 		
-		System.out.println(""+failedCounter+" out of "+allBuildings.size()+" were not matched");
+		System.out.println(""+successCounter+" out of "+allBuildings.size()+" were matched");
 	}
 	
 }

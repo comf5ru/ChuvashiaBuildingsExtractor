@@ -1,7 +1,13 @@
 package buildingsimporter;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,12 +31,14 @@ public class Main {
 
 	public static XMLCacheFixer cache;
 	public static void main(String[] args) throws IOException {
-//		KPGTaxonomer taxonomer = new KPGTaxonomer("kpg_locations_data_ids.txt");
+		KPGTaxonomer taxonomer = new KPGTaxonomer("kpg_locations_data_ids.txt");
 		cache = new XMLCacheFixer("4import_Buildings_Chuvashia.xml");
 		
 		//Получение классов домов в кэше.
 		Collection<Element> allBuildings = cache.queryXPathList("/root/Building");
-
+		System.out.println("Totally "+allBuildings.size()+" buildings loaded from file");
+		generateFDFF(allBuildings);
+		
 //		Collection<String> bs = new LinkedList<>();
 		
 		// Классификация номеров домов парсера.
@@ -208,23 +216,36 @@ public class Main {
 		return;*/
 		
 //		cache.dropEmpty();
+//		allBuildings = cache.queryXPathList("/root/Building");
+//		System.out.println(""+allBuildings.size()+" contain data");
+//		
 //		cache.kill_duplicates();
-		
+//		allBuildings = cache.queryXPathList("/root/Building");
+//		System.out.println(""+allBuildings.size()+" left after removing duplicates");
+//		
 //		cache.match_buildings_streets(taxonomer);
 //		taxonomer = null; //free mem
-		
-		// {addrID -> {houseID}}
-		Map<Integer, Collection<Integer>> houseID_addrID = loadFieldHouseCity("field_data_field_house_city.csv");
-		Map<Integer, String> houseID_bnum = loadFieldHouseNumber("field_data_field_house_number.csv");
-		
-		System.out.println("Read "+houseID_addrID.size()+" termIDs from <field_data_field_house_city.csv>");
-		System.out.println("Read "+houseID_bnum.size()+" lines from <field_data_field_house_number.csv>");
-		
-		cache.match_buildings_number(houseID_addrID, houseID_bnum);
+//		
+//		// {addrID -> {houseID}}
+//		Map<Integer, Collection<Integer>> houseID_addrID = loadFieldHouseCity("field_data_field_house_city.csv");
+//		Map<Integer, String> houseID_bnum = loadFieldHouseNumber("field_data_field_house_number.csv");
+//		
+//		System.out.println("Read "+houseID_addrID.size()+" termIDs from <field_data_field_house_city.csv>");
+//		System.out.println("Read "+houseID_bnum.size()+" lines from <field_data_field_house_number.csv>");
+//		
+//		cache.match_buildings_number(houseID_addrID, houseID_bnum);
 //		cache.saveCache();
 
+		
 	}
 	
+	
+	/**
+	 * Загрузить CSV файл с данными по адресам домов
+	 * @param filename - имя файла для загрузки
+	 * @return отношение {ID улицы -> {ID дома1, ID дома2, ..}}
+	 * @throws IOException
+	 */
 	public static Map<Integer, Collection<Integer>> loadFieldHouseCity(String filename) throws IOException {
 		Map<Integer, Collection<Integer>> fhc = new HashMap<>();
 		try (Scanner sc = new Scanner(Paths.get(filename), StandardCharsets.UTF_8.name())) {
@@ -257,6 +278,12 @@ public class Main {
 		return fhc;
 	}
 	
+	/**
+	 * Загрузить CSV файл с данными по номерам домов
+	 * @param filename - имя файла для загрузки
+	 * @return отношение {ID дома -> номер дома}
+	 * @throws IOException
+	 */
 	public static Map<Integer, String> loadFieldHouseNumber(String filename) throws IOException {
 		Map<Integer, String> fhn = new HashMap<>();
 		try (Scanner sc = new Scanner(Paths.get(filename), StandardCharsets.UTF_8.name())) {
@@ -284,5 +311,102 @@ public class Main {
 		
 		return fhn;
 	}
-
+	
+	static public final
+	HashMap<String, String> walls2HouseType = new HashMap<>();
+	
+	static {
+		walls2HouseType.put("каменные, кирпичные", "29479");
+		walls2HouseType.put("деревянные", "29482");
+		walls2HouseType.put("смешанные", "29481");
+		walls2HouseType.put("панельные", "29480");
+		walls2HouseType.put("блочные", "29547");
+		walls2HouseType.put("монолитные", "29478");
+	}
+	
+	/**
+	 * Получить строку ID термина таксономии для материала стен по названию материала стен.
+	 * @param source - название материала стен, как указано в кэше
+	 * @return ID термина таксономии "Тип дома"
+	 */
+	public static 
+	String mapWallsType(String source) {
+		String hT = source.toLowerCase();
+		if (hT==null || hT.isEmpty() || hT.equals("нет данных"))
+			return null;
+		
+		return walls2HouseType.get(hT);
+	}
+	
+	//"node","house","0","114263","114263","und","0","2"
+	static
+	void generateFDFF(Collection<Element> allBuildings) throws IOException {
+		String filename = "field_data_field_floors.csv";
+		FileOutputStream fos = new FileOutputStream(filename); 
+		OutputStreamWriter out = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
+		
+		for(Element el:allBuildings) {
+			String floors = el.getChildText("floors");
+			String nodeID = el.getChildText("houseId");
+			// паранойя
+			if (floors == null || floors.isEmpty() ||
+				nodeID == null || nodeID.isEmpty())
+				continue;
+			
+			int iFloors; int iNodeID;
+			try { iFloors = Integer.parseInt(floors);
+			} catch (NumberFormatException e) {	continue; /* не число */}
+			
+			try { iNodeID = Integer.parseInt(nodeID);
+			} catch (NumberFormatException e) {	continue; /* не число */}
+			
+			if (iFloors<1 || iNodeID<1)
+				continue;
+			if (iFloors > 20) {
+				System.err.println("hmmm  possibly error with `floors`: "+el.getAttributeValue("url"));
+				continue;
+			}
+			// конец паранойи
+			
+			out.write("\"node\",\"house\",\"0\",\""+String.valueOf(iNodeID)+"\",\""+String.valueOf(iNodeID)+"\",\"und\",\"0\",\""+String.valueOf(iFloors)+"\"\r\n");
+		}
+		
+		out.close();
+	}
+	
+	//"node","house","0","114263","114263","und","0","1978"
+	static
+	void generateFDFHE(Collection<Element> allBuildings) throws IOException {
+		String filename = "field_data_field_house_expl.csv";
+		FileOutputStream fos = new FileOutputStream(filename); 
+		OutputStreamWriter out = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
+		
+		for(Element el:allBuildings) {
+			String explYear = el.getChildText("expl_year");
+			String nodeID = el.getChildText("houseId");
+			// паранойя
+			if (explYear == null || explYear.isEmpty() ||
+				nodeID == null || nodeID.isEmpty())
+				continue;
+			
+			int iExplYear; int iNodeID;
+			try { iExplYear = Integer.parseInt(explYear);
+			} catch (NumberFormatException e) {	continue; /* не число */}
+			
+			try { iNodeID = Integer.parseInt(nodeID);
+			} catch (NumberFormatException e) {	continue; /* не число */}
+			
+			if (iExplYear<1 || iNodeID<1)
+				continue;
+			if (iExplYear>2015 || iExplYear<1900) {
+				System.err.println("hmmm  possibly error with `expl_year`: "+el.getAttributeValue("url"));
+				continue;
+			}
+			// конец паранойи
+			
+			out.write("\"node\",\"house\",\"0\",\""+String.valueOf(iNodeID)+"\",\""+String.valueOf(iNodeID)+"\",\"und\",\"0\",\""+String.valueOf(iExplYear)+"\"\r\n");
+		}
+		
+		out.close();
+	}	
 }
