@@ -1,10 +1,5 @@
 package buildingsimporter;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,7 +36,7 @@ public class XMLCacheFixer extends XMLCache {
 		
 		Collection<Element> allBuildings = queryXPathList(ALL_BUILDINGS);
 		int counter = allBuildings.size();
-		System.out.println("About to go cray in this mess!");
+		System.out.println("Removing duplicates...");
 
 		for (Element buildingElement: allBuildings) {
 			if (--counter%100 ==0 )
@@ -559,7 +554,14 @@ public class XMLCacheFixer extends XMLCache {
 	}
 	
 	//TODO
-	public void match_buildings_number(Map<Integer, Collection<Integer>> houseID_addrID, Map<Integer, String> houseID_bnum) {
+	/**
+	 * Совмещает данные кэша с базой домов, определяя для каждого здания из кэша номер соответствующей ноды.
+	 * Создаёт для каждого элемента <Building> в кэше создаёт один или несколько
+	 * дочерних элементов "houseId" и сохраняет туда номер ноды, если найден.
+	 * @param addrID_houseIDs - отображение {ID улицы -> {ID дома1, ID дома2, ..}}
+	 * @param houseID_bnum - отображение {ID дома -> номер дома}
+	 */
+	public void match_buildings_number(Map<Integer, Collection<Integer>> addrID_houseIDs, Map<Integer, String> houseID_bnum) {
 		Collection<Element> allBuildings = queryXPathList(ALL_BUILDINGS);
 		int counter = allBuildings.size();
 		System.out.println("Matching buildings' numbers.");
@@ -597,7 +599,7 @@ public class XMLCacheFixer extends XMLCache {
 			}
 			
 			// определим все дома на его улице в базе,
-			Collection<Integer> houseIDs = houseID_addrID.get(addrID);
+			Collection<Integer> houseIDs = addrID_houseIDs.get(addrID);
 			if (houseIDs == null || houseIDs.size()==0)
 				continue; //у этого термина нет домов, как странно!
 			
@@ -660,17 +662,38 @@ public class XMLCacheFixer extends XMLCache {
 			
 			if (matchedIDs.size() == 1) {
 				nodeId = matchedIDs.getFirst();
-				Element stID = buildingElement.getChild("houseId");
-				if (stID == null) { 
-					stID = new Element("houseId"); // новый подчинённый элемент для сохранения ID термина адреса.
-					buildingElement.addContent(stID);
-				}
+				
+				// removing old data
+				List<Element> houseIDChildren = buildingElement.getChildren("houseId"); 
+				for (Element ch: houseIDChildren) 
+					ch.detach();
+				
+				// новый подчинённый элемент для сохранения ID термина адреса.
+				Element stID = new Element("houseId"); 
 				stID.setText(String.valueOf(nodeId));
+				buildingElement.addContent(stID);
+				
 				successCounter++;
 			} else if (matchedIDs.size()==2 && houseID_bnum.get(matchedIDs.getFirst()).equals(
-					houseID_bnum.get(matchedIDs.getLast())))
-				;
-			else {
+					houseID_bnum.get(matchedIDs.getLast()))) {
+				// дубликаты в базе - сохраняем оба ID
+				
+				// removing old data
+				List<Element> houseIDChildren = buildingElement.getChildren("houseId"); 
+				for (Element ch: houseIDChildren) 
+					ch.detach();
+				
+				// новый подчинённый элемент для сохранения ID термина адреса.
+				Element stID = new Element("houseId"); 
+				stID.setText(String.valueOf(matchedIDs.getFirst()));
+				buildingElement.addContent(stID);
+				
+				stID = new Element("houseId"); 
+				stID.setText(String.valueOf(matchedIDs.getLast()));
+				buildingElement.addContent(stID);
+				
+				successCounter++;
+			} else {
 				System.out.print(""+buildingElement.getChildText("areaText")+" | "+
 						buildingElement.getChildText("locationName")+" ("+buildingElement.getChildText("location")+
 						") | "+buildingElement.getChildText("street")

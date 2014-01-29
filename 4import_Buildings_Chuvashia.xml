@@ -11796,6 +11796,9 @@
     <flats>143</flats>
     <location>г Новочебоксарск</location>
     <streetTermId>20297</streetTermId>
+    <houseId>139300</houseId>
+    <houseId>139283</houseId>
+    <houseId>139300</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7948482/?group=0" downloaded="2014-01-21T10:25:26.601+03:00">
     <lifts>4</lifts>
@@ -15649,6 +15652,9 @@
     <flats>50</flats>
     <location>г Новочебоксарск</location>
     <streetTermId>20323</streetTermId>
+    <houseId>140207</houseId>
+    <houseId>140181</houseId>
+    <houseId>140207</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8259838/?group=0" downloaded="2014-01-21T10:26:31.573+03:00">
     <lifts>0</lifts>
@@ -16409,6 +16415,9 @@
     <flats>93</flats>
     <location>г Чебоксары</location>
     <streetTermId>19718</streetTermId>
+    <houseId>124842</houseId>
+    <houseId>124838</houseId>
+    <houseId>124842</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8185592/?group=0" downloaded="2014-01-21T10:27:33.259+03:00">
     <lifts>0</lifts>
@@ -16722,6 +16731,9 @@
     <flats>160</flats>
     <location>г Чебоксары</location>
     <streetTermId>19437</streetTermId>
+    <houseId>117450</houseId>
+    <houseId>117437</houseId>
+    <houseId>117450</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8185506/?group=0" downloaded="2014-01-21T10:27:37.690+03:00">
     <lifts>0</lifts>
@@ -16961,6 +16973,9 @@
     <flats>218</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122737</houseId>
+    <houseId>122692</houseId>
+    <houseId>122737</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8185562/?group=0" downloaded="2014-01-21T10:27:40.239+03:00">
     <lifts>1</lifts>
@@ -17005,6 +17020,9 @@
     <flats>217</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122738</houseId>
+    <houseId>122693</houseId>
+    <houseId>122738</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8031310/?group=0" downloaded="2014-01-21T10:27:41.280+03:00">
     <lifts>1</lifts>
@@ -17034,6 +17052,9 @@
     <flats>180</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122739</houseId>
+    <houseId>122696</houseId>
+    <houseId>122739</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8031315/?group=0" downloaded="2014-01-21T10:27:42.323+03:00">
     <lifts>1</lifts>
@@ -17153,6 +17174,9 @@
     <flats>260</flats>
     <location>г Чебоксары</location>
     <streetTermId>19437</streetTermId>
+    <houseId>117446</houseId>
+    <houseId>117436</houseId>
+    <houseId>117446</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8185473/?group=0" downloaded="2014-01-21T10:27:44.137+03:00">
     <lifts>1</lifts>
@@ -17181,6 +17205,9 @@
     <flats>156</flats>
     <location>г Чебоксары</location>
     <streetTermId>19437</streetTermId>
+    <houseId>117484</houseId>
+    <houseId>117443</houseId>
+    <houseId>117484</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8185509/?group=0" downloaded="2014-01-21T10:27:44.110+03:00">
     <lifts>3</lifts>
@@ -17326,6 +17353,9 @@
     <flats>75</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122742</houseId>
+    <houseId>122666</houseId>
+    <houseId>122742</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8059351/?group=0" downloaded="2014-01-21T10:27:47.616+03:00">
     <lifts>0</lifts>
@@ -17340,6 +17370,9 @@
     <flats>40</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122720</houseId>
+    <houseId>122680</houseId>
+    <houseId>122720</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/6939106/?group=0" downloaded="2014-01-21T10:27:47.557+03:00">
     <lifts>нет данных</lifts>
@@ -17369,6 +17402,9 @@
     <flats>40</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122721</houseId>
+    <houseId>122681</houseId>
+    <houseId>122721</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7117732/?group=0" downloaded="2014-01-21T10:27:46.880+03:00">
     <lifts>нет данных</lifts>
@@ -17383,6 +17419,9 @@
     <flats>нет данных</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122744</houseId>
+    <houseId>122669</houseId>
+    <houseId>122744</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/6939416/?group=0" downloaded="2014-01-21T10:27:47.644+03:00">
     <lifts>нет данных</lifts>
@@ -17411,6 +17450,9 @@
     <flats>140</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122722</houseId>
+    <houseId>122682</houseId>
+    <houseId>122722</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7117733/?group=0" downloaded="2014-01-21T10:27:48.075+03:00">
     <lifts>нет данных</lifts>
@@ -17440,6 +17482,9 @@
     <flats>60</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122732</houseId>
+    <houseId>122686</houseId>
+    <houseId>122732</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7117735/?group=0" downloaded="2014-01-21T10:27:49.510+03:00">
     <lifts>нет данных</lifts>
@@ -17469,6 +17514,9 @@
     <flats>60</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122733</houseId>
+    <houseId>122688</houseId>
+    <houseId>122733</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7117736/?group=0" downloaded="2014-01-21T10:27:49.322+03:00">
     <lifts>нет данных</lifts>
@@ -17498,6 +17546,9 @@
     <flats>149</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122734</houseId>
+    <houseId>122689</houseId>
+    <houseId>122734</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8185545/?group=0" downloaded="2014-01-21T10:27:49.187+03:00">
     <lifts>0</lifts>
@@ -18033,6 +18084,9 @@
     <flats>нет данных</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122741</houseId>
+    <houseId>122663</houseId>
+    <houseId>122741</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8079382/?group=0" downloaded="2014-01-21T10:27:58.201+03:00">
     <lifts>0</lifts>
@@ -18047,6 +18101,9 @@
     <flats>39</flats>
     <location>г Чебоксары</location>
     <streetTermId>19619</streetTermId>
+    <houseId>122719</houseId>
+    <houseId>122679</houseId>
+    <houseId>122719</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7961685/?group=0" downloaded="2014-01-21T10:27:59.351+03:00">
     <lifts>6</lifts>
@@ -20782,6 +20839,9 @@
     <flats>62</flats>
     <location>г Чебоксары</location>
     <streetTermId>19408</streetTermId>
+    <houseId>116395</houseId>
+    <houseId>116349</houseId>
+    <houseId>116395</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/6503538/?group=0" downloaded="2014-01-21T10:28:50.720+03:00">
     <lifts>0</lifts>
@@ -20975,6 +21035,9 @@
     <flats>55</flats>
     <location>г Чебоксары</location>
     <streetTermId>19408</streetTermId>
+    <houseId>116396</houseId>
+    <houseId>116350</houseId>
+    <houseId>116396</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8185665/?group=0" downloaded="2014-01-21T10:28:52.354+03:00">
     <lifts>3</lifts>
@@ -21019,6 +21082,9 @@
     <flats>121</flats>
     <location>г Чебоксары</location>
     <streetTermId>19408</streetTermId>
+    <houseId>116397</houseId>
+    <houseId>116352</houseId>
+    <houseId>116397</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8185674/?group=0" downloaded="2014-01-21T10:28:54.309+03:00">
     <lifts>3</lifts>
@@ -28886,7 +28952,7 @@
     <building_number>21</building_number>
     <floors>5</floors>
     <porches>4</porches>
-    <expl_year>1664</expl_year>
+    <expl_year>1964</expl_year>
     <flats>64</flats>
     <location>г Чебоксары</location>
     <streetTermId>19315</streetTermId>
@@ -28978,6 +29044,9 @@
     <flats>261</flats>
     <location>г Чебоксары</location>
     <streetTermId>19315</streetTermId>
+    <houseId>113442</houseId>
+    <houseId>113388</houseId>
+    <houseId>113442</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7817768/?group=0" downloaded="2014-01-21T10:31:23.944+03:00">
     <lifts>нет данных</lifts>
@@ -30828,6 +30897,9 @@
     <flats>134</flats>
     <location>г Чебоксары</location>
     <streetTermId>19328</streetTermId>
+    <houseId>114194</houseId>
+    <houseId>114177</houseId>
+    <houseId>114194</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8186507/?group=0" downloaded="2014-01-21T10:31:56.128+03:00">
     <lifts>0</lifts>
@@ -30887,6 +30959,9 @@
     <flats>60</flats>
     <location>г Чебоксары</location>
     <streetTermId>19328</streetTermId>
+    <houseId>114195</houseId>
+    <houseId>114178</houseId>
+    <houseId>114195</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/6503571/?group=0" downloaded="2014-01-21T10:31:57.086+03:00">
     <lifts>0</lifts>
@@ -30901,6 +30976,9 @@
     <flats>75</flats>
     <location>г Чебоксары</location>
     <streetTermId>19328</streetTermId>
+    <houseId>114184</houseId>
+    <houseId>114153</houseId>
+    <houseId>114184</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7874912/?group=0" downloaded="2014-01-21T10:31:55.574+03:00">
     <lifts>1</lifts>
@@ -31123,6 +31201,9 @@
     <flats>60</flats>
     <location>г Чебоксары</location>
     <streetTermId>19328</streetTermId>
+    <houseId>114192</houseId>
+    <houseId>114175</houseId>
+    <houseId>114192</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8019076/?group=0" downloaded="2014-01-21T10:32:00.975+03:00">
     <lifts>0</lifts>
@@ -31137,6 +31218,9 @@
     <flats>80</flats>
     <location>г Чебоксары</location>
     <streetTermId>19328</streetTermId>
+    <houseId>114183</houseId>
+    <houseId>114143</houseId>
+    <houseId>114183</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8053812/?group=0" downloaded="2014-01-21T10:32:00.913+03:00">
     <lifts>0</lifts>
@@ -31151,6 +31235,9 @@
     <flats>90</flats>
     <location>г Чебоксары</location>
     <streetTermId>19328</streetTermId>
+    <houseId>114193</houseId>
+    <houseId>114176</houseId>
+    <houseId>114193</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7987973/?group=0" downloaded="2014-01-21T10:31:59.952+03:00">
     <lifts>нет данных</lifts>
@@ -37090,6 +37177,9 @@
     <flats>212</flats>
     <location>г Чебоксары</location>
     <streetTermId>19429</streetTermId>
+    <houseId>117163</houseId>
+    <houseId>117135</houseId>
+    <houseId>117163</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7946148/?group=0" downloaded="2014-01-21T10:34:04.107+03:00">
     <lifts>1</lifts>
@@ -37208,6 +37298,9 @@
     <flats>141</flats>
     <location>г Чебоксары</location>
     <streetTermId>19440</streetTermId>
+    <houseId>117646</houseId>
+    <houseId>117607</houseId>
+    <houseId>117646</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/6503578/?group=0" downloaded="2014-01-21T10:34:06.703+03:00">
     <lifts>6</lifts>
@@ -37251,6 +37344,9 @@
     <flats>96</flats>
     <location>г Чебоксары</location>
     <streetTermId>19440</streetTermId>
+    <houseId>117648</houseId>
+    <houseId>117609</houseId>
+    <houseId>117648</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7356386/?group=0" downloaded="2014-01-21T10:34:09.300+03:00">
     <lifts>1</lifts>
@@ -37265,6 +37361,9 @@
     <flats>143</flats>
     <location>г Чебоксары</location>
     <streetTermId>19440</streetTermId>
+    <houseId>117649</houseId>
+    <houseId>117610</houseId>
+    <houseId>117649</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8009062/?group=0" downloaded="2014-01-21T10:34:10.152+03:00">
     <lifts>5</lifts>
@@ -37279,6 +37378,9 @@
     <flats>239</flats>
     <location>г Чебоксары</location>
     <streetTermId>19440</streetTermId>
+    <houseId>117650</houseId>
+    <houseId>117611</houseId>
+    <houseId>117650</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8186940/?group=0" downloaded="2014-01-21T10:34:09.307+03:00">
     <lifts>0</lifts>
@@ -37323,6 +37425,9 @@
     <flats>104</flats>
     <location>г Чебоксары</location>
     <streetTermId>19440</streetTermId>
+    <houseId>117651</houseId>
+    <houseId>117612</houseId>
+    <houseId>117651</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8186920/?group=0" downloaded="2014-01-21T10:34:12.921+03:00">
     <lifts>2</lifts>
@@ -37337,6 +37442,9 @@
     <flats>93</flats>
     <location>г Чебоксары</location>
     <streetTermId>19440</streetTermId>
+    <houseId>117652</houseId>
+    <houseId>117613</houseId>
+    <houseId>117652</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8019104/?group=0" downloaded="2014-01-21T10:34:12.793+03:00">
     <lifts>0</lifts>
@@ -39376,6 +39484,9 @@
     <flats>116</flats>
     <location>г Чебоксары</location>
     <streetTermId>19498</streetTermId>
+    <houseId>119479</houseId>
+    <houseId>119415</houseId>
+    <houseId>119479</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8019472/?group=0" downloaded="2014-01-21T10:34:48.975+03:00">
     <lifts>0</lifts>
@@ -39449,6 +39560,9 @@
     <flats>111</flats>
     <location>г Чебоксары</location>
     <streetTermId>19498</streetTermId>
+    <houseId>119480</houseId>
+    <houseId>119419</houseId>
+    <houseId>119480</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8187095/?group=0" downloaded="2014-01-21T10:34:49.527+03:00">
     <lifts>2</lifts>
@@ -39642,6 +39756,9 @@
     <flats>120</flats>
     <location>г Чебоксары</location>
     <streetTermId>19498</streetTermId>
+    <houseId>119453</houseId>
+    <houseId>119431</houseId>
+    <houseId>119453</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8019458/?group=0" downloaded="2014-01-21T10:34:52.197+03:00">
     <lifts>0</lifts>
@@ -39686,6 +39803,9 @@
     <flats>21</flats>
     <location>г Чебоксары</location>
     <streetTermId>19499</streetTermId>
+    <houseId>119540</houseId>
+    <houseId>119491</houseId>
+    <houseId>119540</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/6490289/?group=0" downloaded="2014-01-21T10:34:53.519+03:00">
     <lifts>нет данных</lifts>
@@ -39760,6 +39880,9 @@
     <flats>57</flats>
     <location>г Чебоксары</location>
     <streetTermId>19357</streetTermId>
+    <houseId>114799</houseId>
+    <houseId>114798</houseId>
+    <houseId>114799</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7117728/?group=0" downloaded="2014-01-21T10:34:55.639+03:00">
     <lifts>нет данных</lifts>
@@ -42270,6 +42393,9 @@
     <flats>117</flats>
     <location>г Чебоксары</location>
     <streetTermId>19574</streetTermId>
+    <houseId>121356</houseId>
+    <houseId>121281</houseId>
+    <houseId>121356</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7356415/?group=0" downloaded="2014-01-21T10:35:48.198+03:00">
     <lifts>3</lifts>
@@ -42314,6 +42440,9 @@
     <flats>84</flats>
     <location>г Чебоксары</location>
     <streetTermId>19574</streetTermId>
+    <houseId>121357</houseId>
+    <houseId>121283</houseId>
+    <houseId>121357</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7951248/?group=0" downloaded="2014-01-21T10:35:50.459+03:00">
     <lifts>2</lifts>
@@ -42358,6 +42487,9 @@
     <flats>62</flats>
     <location>г Чебоксары</location>
     <streetTermId>19574</streetTermId>
+    <houseId>121360</houseId>
+    <houseId>121285</houseId>
+    <houseId>121360</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8187280/?group=0" downloaded="2014-01-21T10:35:49.443+03:00">
     <lifts>2</lifts>
@@ -42490,6 +42622,9 @@
     <flats>80</flats>
     <location>г Чебоксары</location>
     <streetTermId>19574</streetTermId>
+    <houseId>121361</houseId>
+    <houseId>121286</houseId>
+    <houseId>121361</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7356434/?group=0" downloaded="2014-01-21T10:35:55.926+03:00">
     <lifts>6</lifts>
@@ -42533,6 +42668,9 @@
     <flats>297</flats>
     <location>г Чебоксары</location>
     <streetTermId>19574</streetTermId>
+    <houseId>121362</houseId>
+    <houseId>121287</houseId>
+    <houseId>121362</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7356438/?group=0" downloaded="2014-01-21T10:35:59.537+03:00">
     <lifts>5</lifts>
@@ -42592,6 +42730,9 @@
     <flats>134</flats>
     <location>г Чебоксары</location>
     <streetTermId>19574</streetTermId>
+    <houseId>121355</houseId>
+    <houseId>121280</houseId>
+    <houseId>121355</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7356411/?group=0" downloaded="2014-01-21T10:35:58.045+03:00">
     <lifts>3</lifts>
@@ -46070,6 +46211,9 @@
     <flats>74</flats>
     <location>г Чебоксары</location>
     <streetTermId>19622</streetTermId>
+    <houseId>122862</houseId>
+    <houseId>122844</houseId>
+    <houseId>122862</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/6503585/?group=0" downloaded="2014-01-21T10:37:00.106+03:00">
     <lifts>1</lifts>
@@ -46084,6 +46228,9 @@
     <flats>154</flats>
     <location>г Чебоксары</location>
     <streetTermId>19622</streetTermId>
+    <houseId>122868</houseId>
+    <houseId>122827</houseId>
+    <houseId>122868</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/6503586/?group=0" downloaded="2014-01-21T10:36:59.518+03:00">
     <lifts>1</lifts>
@@ -46098,6 +46245,9 @@
     <flats>164</flats>
     <location>г Чебоксары</location>
     <streetTermId>19622</streetTermId>
+    <houseId>122869</houseId>
+    <houseId>122828</houseId>
+    <houseId>122869</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/6482134/?group=0" downloaded="2014-01-21T10:37:02.857+03:00">
     <lifts>1</lifts>
@@ -46112,6 +46262,9 @@
     <flats>136</flats>
     <location>г Чебоксары</location>
     <streetTermId>19622</streetTermId>
+    <houseId>122870</houseId>
+    <houseId>122829</houseId>
+    <houseId>122870</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8187665/?group=0" downloaded="2014-01-21T10:37:01.013+03:00">
     <lifts>7</lifts>
@@ -46171,6 +46324,9 @@
     <flats>40</flats>
     <location>г Чебоксары</location>
     <streetTermId>19623</streetTermId>
+    <houseId>122904</houseId>
+    <houseId>122873</houseId>
+    <houseId>122904</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8187719/?group=0" downloaded="2014-01-21T10:37:00.424+03:00">
     <lifts>0</lifts>
@@ -46200,6 +46356,9 @@
     <flats>30</flats>
     <location>г Чебоксары</location>
     <streetTermId>19623</streetTermId>
+    <houseId>122905</houseId>
+    <houseId>122874</houseId>
+    <houseId>122905</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8187722/?group=0" downloaded="2014-01-21T10:37:01.233+03:00">
     <lifts>0</lifts>
@@ -46229,6 +46388,9 @@
     <flats>32</flats>
     <location>г Чебоксары</location>
     <streetTermId>19623</streetTermId>
+    <houseId>122906</houseId>
+    <houseId>122875</houseId>
+    <houseId>122906</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8187725/?group=0" downloaded="2014-01-21T10:37:02.271+03:00">
     <lifts>0</lifts>
@@ -46721,6 +46883,9 @@
     <flats>29</flats>
     <location>г Чебоксары</location>
     <streetTermId>19623</streetTermId>
+    <houseId>122902</houseId>
+    <houseId>122871</houseId>
+    <houseId>122902</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/8187641/?group=0" downloaded="2014-01-21T10:37:11.991+03:00">
     <lifts>4</lifts>
@@ -46928,6 +47093,9 @@
     <flats>208</flats>
     <location>г Чебоксары</location>
     <streetTermId>19626</streetTermId>
+    <houseId>123041</houseId>
+    <houseId>123021</houseId>
+    <houseId>123041</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7945942/?group=0" downloaded="2014-01-21T10:37:17.168+03:00">
     <lifts>5</lifts>
@@ -46942,6 +47110,9 @@
     <flats>184</flats>
     <location>г Чебоксары</location>
     <streetTermId>19626</streetTermId>
+    <houseId>123042</houseId>
+    <houseId>123024</houseId>
+    <houseId>123042</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7945904/?group=0" downloaded="2014-01-21T10:37:16.919+03:00">
     <lifts>6</lifts>
@@ -46956,6 +47127,9 @@
     <flats>154</flats>
     <location>г Чебоксары</location>
     <streetTermId>19626</streetTermId>
+    <houseId>123038</houseId>
+    <houseId>123025</houseId>
+    <houseId>123038</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7961650/?group=0" downloaded="2014-01-21T10:37:19.011+03:00">
     <lifts>5</lifts>
@@ -46970,6 +47144,9 @@
     <flats>200</flats>
     <location>г Чебоксары</location>
     <streetTermId>19626</streetTermId>
+    <houseId>123043</houseId>
+    <houseId>123030</houseId>
+    <houseId>123043</houseId>
   </Building>
   <Building url="http://www.reformagkh.ru/myhouse/view/7945948/?group=0" downloaded="2014-01-21T10:37:21.636+03:00">
     <lifts>10</lifts>

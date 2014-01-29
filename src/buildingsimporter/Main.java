@@ -1,19 +1,15 @@
 package buildingsimporter;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,6 +25,18 @@ import buildingsimporter.KPGTaxonomer.KPGTerm;
  */
 public class Main {
 
+	/**
+	 * Интерфейс проверки/поправки данных для экспорта
+	 */
+	static interface IDataValidator {
+		
+		/**
+		 * Проверяет целостность данных
+		 * @param data - данные
+		 * @return null если данные не могут быть экспортированы, строку для экспорта иначе
+		 */
+		String validate(Integer data, String testedURL);
+	}
 	public static XMLCacheFixer cache;
 	public static void main(String[] args) throws IOException {
 		KPGTaxonomer taxonomer = new KPGTaxonomer("kpg_locations_data_ids.txt");
@@ -37,7 +45,6 @@ public class Main {
 		//Получение классов домов в кэше.
 		Collection<Element> allBuildings = cache.queryXPathList("/root/Building");
 		System.out.println("Totally "+allBuildings.size()+" buildings loaded from file");
-		generateFDFF(allBuildings);
 		
 //		Collection<String> bs = new LinkedList<>();
 		
@@ -236,7 +243,71 @@ public class Main {
 //		cache.match_buildings_number(houseID_addrID, houseID_bnum);
 //		cache.saveCache();
 
+		generateCSV(allBuildings, "field_data_field_floors.csv", "floors", new IDataValidator() {
+			@Override
+			public String validate(Integer data, String testedURL) {
+				if (data<1)
+					return null;
+				if (data > 20) {
+					System.err.println("hmmm  possibly error with `floors`: "+testedURL);
+					return null;
+				}
+				
+				return String.valueOf(data);
+			}
+		});
 		
+		generateCSV(allBuildings, "field_data_field_house_expl.csv", "expl_year", new IDataValidator() {
+			@Override
+			public String validate(Integer data, String testedURL) {
+				if (data<1)
+					return null;
+				if (data>2015 || data<1850) {
+					System.err.println("hmmm  possibly error with `expl_year`: "+testedURL);
+					return null;
+				}				
+				return String.valueOf(data);
+			}
+		});
+		
+		generateCSV(allBuildings, "field_data_field_house_flats.csv", "flats", new IDataValidator() {
+			@Override
+			public String validate(Integer data, String testedURL) {
+				if (data<1)
+					return null;
+				return String.valueOf(data);
+			}
+		});
+		
+		generateCSV(allBuildings, "field_data_field_house_lift.csv", "lifts", new IDataValidator() {
+			@Override
+			public String validate(Integer data, String testedURL) {
+				if (data > 1) data = 1;
+				if (data < 0) data = 0;
+				
+				return String.valueOf(data);
+			}
+		});
+		
+		generateCSV(allBuildings, "field_data_field_house_porches.csv", "porches", new IDataValidator() {
+			@Override
+			public String validate(Integer data, String testedURL) {
+				if (data < 1)
+					return null;
+				else return String.valueOf(data);
+			}
+		});
+		
+		generateCSV(allBuildings, "field_data_field_house_porches.csv", "porches", new IDataValidator() {
+			@Override
+			public String validate(Integer data, String testedURL) {
+				if (data < 1)
+					return null;
+				else return String.valueOf(data);
+			}
+		});
+		
+		generateCSVHouseType(allBuildings);
 	}
 	
 	
@@ -340,73 +411,80 @@ public class Main {
 	
 	//"node","house","0","114263","114263","und","0","2"
 	static
-	void generateFDFF(Collection<Element> allBuildings) throws IOException {
-		String filename = "field_data_field_floors.csv";
+	void generateCSV(Collection<Element> allBuildings, String filename, String dataKey, IDataValidator dv) throws IOException {
 		FileOutputStream fos = new FileOutputStream(filename); 
 		OutputStreamWriter out = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
 		
 		for(Element el:allBuildings) {
-			String floors = el.getChildText("floors");
-			String nodeID = el.getChildText("houseId");
+			String data = el.getChildText(dataKey);
+			List<Element> nodeIDelements = el.getChildren("houseId"); // отображений может быть несколько
+
 			// паранойя
-			if (floors == null || floors.isEmpty() ||
-				nodeID == null || nodeID.isEmpty())
+			if (data == null || data.isEmpty())
 				continue;
 			
-			int iFloors; int iNodeID;
-			try { iFloors = Integer.parseInt(floors);
+			int iData; 
+			try { iData = Integer.parseInt(data);
 			} catch (NumberFormatException e) {	continue; /* не число */}
 			
-			try { iNodeID = Integer.parseInt(nodeID);
-			} catch (NumberFormatException e) {	continue; /* не число */}
-			
-			if (iFloors<1 || iNodeID<1)
+			String expData = dv.validate(iData, el.getAttributeValue("url"));
+			if (expData == null)
 				continue;
-			if (iFloors > 20) {
-				System.err.println("hmmm  possibly error with `floors`: "+el.getAttributeValue("url"));
-				continue;
-			}
 			// конец паранойи
-			
-			out.write("\"node\",\"house\",\"0\",\""+String.valueOf(iNodeID)+"\",\""+String.valueOf(iNodeID)+"\",\"und\",\"0\",\""+String.valueOf(iFloors)+"\"\r\n");
+			int iNodeID;
+			for (Element nodeIDelement: nodeIDelements) {
+				String nodeID = nodeIDelement.getText();
+				if (nodeID == null || nodeID.isEmpty())
+					continue;
+				
+				try { iNodeID = Integer.parseInt(nodeID);
+				} catch (NumberFormatException e) {	continue; /* не число */}
+				
+				out.write("\"node\",\"house\",\"0\",\""+String.valueOf(iNodeID)+"\",\""+String.valueOf(iNodeID)+"\",\"und\",\"0\",\""+expData+"\"\r\n");
+			}
 		}
 		
 		out.close();
 	}
 	
-	//"node","house","0","114263","114263","und","0","1978"
+	//"node","house","0","114263","114263","und","0","2"
 	static
-	void generateFDFHE(Collection<Element> allBuildings) throws IOException {
-		String filename = "field_data_field_house_expl.csv";
+	void generateCSVHouseType(Collection<Element> allBuildings) throws IOException {
+		String filename="field_data_field_house_type.csv";
+		
 		FileOutputStream fos = new FileOutputStream(filename); 
 		OutputStreamWriter out = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
 		
 		for(Element el:allBuildings) {
-			String explYear = el.getChildText("expl_year");
-			String nodeID = el.getChildText("houseId");
+			String data = el.getChildText("walls");
+			List<Element> nodeIDelements = el.getChildren("houseId"); // отображений может быть несколько
+
 			// паранойя
-			if (explYear == null || explYear.isEmpty() ||
-				nodeID == null || nodeID.isEmpty())
+			if (data == null || data.isEmpty())
 				continue;
 			
-			int iExplYear; int iNodeID;
-			try { iExplYear = Integer.parseInt(explYear);
-			} catch (NumberFormatException e) {	continue; /* не число */}
+//			int iData; 
+//			try { iData = Integer.parseInt(data);
+//			} catch (NumberFormatException e) {	continue; /* не число */}
 			
-			try { iNodeID = Integer.parseInt(nodeID);
-			} catch (NumberFormatException e) {	continue; /* не число */}
-			
-			if (iExplYear<1 || iNodeID<1)
+			String expData = mapWallsType(data);
+			if (expData == null)
 				continue;
-			if (iExplYear>2015 || iExplYear<1900) {
-				System.err.println("hmmm  possibly error with `expl_year`: "+el.getAttributeValue("url"));
-				continue;
-			}
 			// конец паранойи
-			
-			out.write("\"node\",\"house\",\"0\",\""+String.valueOf(iNodeID)+"\",\""+String.valueOf(iNodeID)+"\",\"und\",\"0\",\""+String.valueOf(iExplYear)+"\"\r\n");
+			int iNodeID;
+			for (Element nodeIDelement: nodeIDelements) {
+				String nodeID = nodeIDelement.getText();
+				if (nodeID == null || nodeID.isEmpty())
+					continue;
+				
+				try { iNodeID = Integer.parseInt(nodeID);
+				} catch (NumberFormatException e) {	continue; /* не число */}
+				
+				out.write("\"node\",\"house\",\"0\",\""+String.valueOf(iNodeID)+"\",\""+String.valueOf(iNodeID)+"\",\"und\",\"0\",\""+expData+"\"\r\n");
+			}
 		}
 		
 		out.close();
 	}	
+	
 }
